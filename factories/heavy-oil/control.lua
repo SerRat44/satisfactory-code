@@ -1,5 +1,17 @@
 -- factories/heavy-oil/control.lua
 return function(dependencies)
+    -- Print out what we received
+    print("Dependencies received:")
+    for k, v in pairs(dependencies) do
+        print(k, type(v))
+    end
+    print("Display class:", dependencies.display)
+    if dependencies.display then
+        print("Display class type:", type(dependencies.display))
+        for k, v in pairs(dependencies.display) do
+            print("  -", k, type(v))
+        end
+    end
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
