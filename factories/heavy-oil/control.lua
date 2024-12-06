@@ -3,7 +3,7 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local Display = dependencies.display -- This is the Display class, not an instance
+    local Display = dependencies.display -- This is the Display class
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
 
@@ -32,9 +32,18 @@ return function(dependencies)
             error("Display panel not found!")
         end
 
-        -- Initialize display with the panel using the class's new method
-        display = Display:new(displayPanel)
+        -- Initialize display with the panel
+        print("Creating display instance...")
+        display = Display:new(displayPanel) -- Use the class's new method directly
+        if not display then
+            error("Failed to create display instance!")
+        end
+
+        print("Initializing display modules...")
         modules = display:initialize()
+        if not modules then
+            error("Failed to initialize display modules!")
+        end
 
         power = Power:new(modules, dependencies)
         monitoring = Monitoring:new(modules, dependencies)
@@ -66,8 +75,6 @@ return function(dependencies)
                 break
             end
 
-            print("Event received: " .. tostring(e))
-
             if e == "ChangeState" then
                 local powerAction = power.powerControls[s.Hash]
                 if powerAction then
@@ -89,14 +96,12 @@ return function(dependencies)
             end
 
             -- Update displays
-            print("Updating displays...")
             monitoring:updateProductivityHistory()
             power:updatePowerDisplays()
             power:updatePowerIndicators()
 
             -- Broadcast status
             if dataCollectionActive then
-                print("Broadcasting status...")
                 monitoring:broadcastRefineryStatus()
                 power:broadcastPowerStatus()
             end
