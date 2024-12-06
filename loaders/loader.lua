@@ -1,20 +1,20 @@
 local GITHUB_URL = "https://raw.githubusercontent.com/SerRat44/satisfactory-code/main"
-local FACTORY_NAME = "heavy-oil"  -- Change this for different factories
+local FACTORY_NAME = "heavy-oil" -- Change this for different factories
 local internet = computer.getPCIDevices(classes.Build_InternetCard_C)[1]
 
 function downloadFromGithub(path)
     local url = GITHUB_URL .. "/" .. path
     local future = internet:request(url, "GET", "")
-    
+
     -- Wait for the response
     while not future.isDone do
         event.pull(0.1)
     end
-    
+
     local response = future.data
     if response then
         return response
-    else 
+    else
         error("Failed to download " .. path)
     end
 end
@@ -26,7 +26,7 @@ function loadFiles()
     print("Loaded colors")
     local utils = load(downloadFromGithub("common/utils.lua"))()
     print("Loaded utils")
-    
+
     -- Load factory specific files
     local base_path = "factories/" .. FACTORY_NAME .. "/"
     local config = load(downloadFromGithub(base_path .. "config.lua"))()
@@ -35,7 +35,7 @@ function loadFiles()
     local power = load(downloadFromGithub(base_path .. "power.lua"))()
     local monitoring = load(downloadFromGithub(base_path .. "monitoring.lua"))()
     local control = load(downloadFromGithub(base_path .. "control.lua"))()
-    
+
     -- Create environment with loaded modules
     local env = {
         colors = colors,
@@ -49,9 +49,9 @@ function loadFiles()
         event = event,
         error = error,
     }
-    
+
     -- Set environment and run control
-    setmetatable(env, {__index = _G})
+    setmetatable(env, { __index = _G })
     setfenv(control, env)
     control()
 end

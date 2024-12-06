@@ -35,7 +35,7 @@ end
 function main()
     while true do
         local e, s, sender, port, type, data = event.pull(config.UPDATE_INTERVAL)
-        
+
         if e == "ChangeState" then
             local powerAction = power.powerControls[s.Hash]
             if powerAction then
@@ -55,12 +55,12 @@ function main()
         elseif e == "NetworkMessage" then
             handleNetworkMessage(type, data)
         end
-        
+
         -- Update displays
         monitoring:updateProductivityHistory()
         power:updatePowerDisplays()
         power:updatePowerIndicators()
-        
+
         -- Broadcast status
         if dataCollectionActive then
             monitoring:broadcastRefineryStatus()
