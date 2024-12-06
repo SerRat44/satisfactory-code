@@ -199,12 +199,16 @@ function Monitoring:getRefineryStatus(refinery)
 
     local productivity = tonumber(refinery.productivity) or 0
 
-    if productivity >= 95 then
-        return "WORKING"
-    elseif productivity >= 75 then
+    if productivity < 5 then
+        return "OFF"
+    elseif productivity < 75 then
         return "WARNING"
-    else
+    elseif productivity < 95 then
         return "IDLE"
+    elseif productivity >= 95 then
+        return "WORKING"
+    else
+        return "OFF"
     end
 end
 
