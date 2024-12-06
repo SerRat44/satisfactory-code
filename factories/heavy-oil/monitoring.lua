@@ -86,8 +86,7 @@ function Monitoring:updateProductivityHistory()
                 self:updateGaugeColor(self.display.factory.gauges[i], prod)
             else
                 self.display.factory.gauges[i].percent = 0
-                self.utils.setComponentColor(self.display.factory.gauges[i], self.colors.STATUS.OFF,
-                    self.colors.EMIT.GAUGE)
+                self.utils.setComponentBackgroundColor(self.display.factory.gauges[i], self.colors.STATUS.OFF)
             end
         end
 
