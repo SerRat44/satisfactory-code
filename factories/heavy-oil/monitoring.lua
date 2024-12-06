@@ -6,7 +6,8 @@ local Monitoring = {
     current_productivity = 0,
     emergency_state = false,
     display = nil,
-    networkCard = nil -- Add network card property
+    networkCard = nil,
+    light_switch = nil -- Add light switch property
 }
 
 function Monitoring:new(display, dependencies)
@@ -28,6 +29,13 @@ function Monitoring:new(display, dependencies)
 end
 
 function Monitoring:initialize()
+    -- Initialize light switch
+    self.light_switch = component.proxy(self.config.COMPONENT_IDS.LIGHT_SWITCH)
+    if not self.light_switch then
+        error("Light switch not found")
+    end
+
+    -- Initialize refineries
     for i, id in ipairs(self.config.REFINERY_IDS) do
         self.refineries[i] = component.proxy(id)
     end
@@ -67,7 +75,9 @@ end
 function Monitoring:updateProductivityHistory()
     local current_prod = self:getAvgProductivity()
 
+    -- Update gauges and button colors together
     for i, refinery in ipairs(self.refineries) do
+        -- Update gauge if it exists
         if self.display.factory.gauges[i] then
             if refinery and not refinery.standby then
                 local prod = tonumber(refinery.productivity) or 0
@@ -80,6 +90,9 @@ function Monitoring:updateProductivityHistory()
                     self.colors.EMIT.GAUGE)
             end
         end
+
+        -- Update button colors regardless of gauge existence
+        self:updateButtonColor(i)
     end
 
     if #self.productivity_history > self.config.HISTORY_LENGTH then
