@@ -1,58 +1,59 @@
-local colors = require('common.colors')
-local config = require('config')
+return function(dependencies)
+    local colors = dependencies.colors
+    local config = dependencies.config
 
-local Display = {
-    panel = nil,
-    modules = {
-        factory = {
-            buttons = {},
-            gauges = {},
-            emergency_stop = nil,
-            health_indicator = nil,
-            productivity_display = nil
-        },
-        power = {
-            switches = {
-                MAIN = nil,
-                BATTERY = nil
+    local Display = {
+        panel = nil,
+        modules = {
+            factory = {
+                buttons = {},
+                gauges = {},
+                emergency_stop = nil,
+                health_indicator = nil,
+                productivity_display = nil
             },
-            indicators = {
-                MAIN = nil,
-                MAIN_SWITCH = nil,
-                FACTORY = nil,
-                BATTERY_SWITCH = nil,
-                BATTERY = nil
+            power = {
+                switches = {
+                    MAIN = nil,
+                    BATTERY = nil
+                },
+                indicators = {
+                    MAIN = nil,
+                    MAIN_SWITCH = nil,
+                    FACTORY = nil,
+                    BATTERY_SWITCH = nil,
+                    BATTERY = nil
+                },
+                BATTERY = {
+                    REMAINING_TIME = nil,
+                    ON_BATTERIES = nil,
+                    CHARGING = nil,
+                    PERCENTAGE = nil,
+                    MWH = nil
+                },
+                POWER_DISPLAYS = {
+                    MAIN_PRODUCED = nil,
+                    MAIN_USED = nil,
+                    FACTORY_USED = nil
+                }
             },
-            BATTERY = {
-                REMAINING_TIME = nil,
-                ON_BATTERIES = nil,
-                CHARGING = nil,
-                PERCENTAGE = nil,
-                MWH = nil
-            },
-            POWER_DISPLAYS = {
-                MAIN_PRODUCED = nil,
-                MAIN_USED = nil,
-                FACTORY_USED = nil
-            }
-        },
-        flow = {
-            gauges = {
-                crude = {},
-                heavy = {}
-            },
-            displays = {
-                crude = {},
-                heavy = {},
-                polymer = nil
-            },
-            knobs = {
-                crude = {},
-                heavy = {}
+            flow = {
+                gauges = {
+                    crude = {},
+                    heavy = {}
+                },
+                displays = {
+                    crude = {},
+                    heavy = {},
+                    polymer = nil
+                },
+                knobs = {
+                    crude = {},
+                    heavy = {}
+                }
             }
         }
     }
-}
 
 function Display:new(display_panel)
     local instance = {}
@@ -151,3 +152,5 @@ function Display:initializePowerModules()
 end
 
 return Display
+
+end
