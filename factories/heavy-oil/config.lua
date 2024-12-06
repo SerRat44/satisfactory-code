@@ -1,9 +1,9 @@
 -- factories/heavy-oil/config.lua
 
 return {
-    local HISTORY_LENGTH = 1800,  -- 30 minutes in seconds (30 * 60)
-local UPDATE_INTERVAL = 1,
-local REFINERY_IDS = {
+ HISTORY_LENGTH = 1800,  -- 30 minutes in seconds (30 * 60)
+UPDATE_INTERVAL = 1,
+REFINERY_IDS = {
 	"D1F743E04B122411F5D883AB9451315A",
 	"721DAD354B8903283D76468DFA21F5CF",
 	"0FD5BAA340D21090089A2888EFF3B7D9",
