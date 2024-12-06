@@ -93,14 +93,24 @@ function loadFiles()
         component = component,
         event = event,
         error = error,
+        print = print,
+        string = string,
+        math = math,
+        table = table,
+        pairs = pairs,
+        ipairs = ipairs,
+        type = type,
+        tostring = tostring,
+        tonumber = tonumber,
     }
 
-    -- Set environment and run control
+    -- Run control with the local environment
     print("Setting up environment...")
-    setmetatable(env, { __index = _G })
-    setfenv(controlFn, env)
-    print("Running control...")
-    local success, err = pcall(controlFn)
+    local success, err = pcall(function()
+        local _ENV = env
+        controlFn()
+    end)
+
     if not success then
         error("Control execution failed: " .. tostring(err))
     end

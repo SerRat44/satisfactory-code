@@ -23,6 +23,7 @@ return function(dependencies)
     event.listen(net)
 
     local dataCollectionActive = true
+    local running = true -- Add a flag to control the loop
 
     function handleNetworkMessage(type, data)
         if type == "collection" then
@@ -34,8 +35,17 @@ return function(dependencies)
 
     -- Main control loop
     function main()
-        while true do
-            local e, s, sender, port, type, data = event.pull(config.UPDATE_INTERVAL)
+        print("Starting main control loop...")
+        while running do
+            local success, e, s, sender, port, type, data = pcall(function()
+                return event.pull(config.UPDATE_INTERVAL)
+            end)
+
+            if not success then
+                print("Error in event processing: " .. tostring(e))
+                running = false -- Exit on error
+                break
+            end
 
             if e == "ChangeState" then
                 local powerAction = power.powerControls[s.Hash]
@@ -68,6 +78,8 @@ return function(dependencies)
                 power:broadcastPowerStatus()
             end
         end
+
+        print("Exiting main control loop...")
     end
 
     main()
