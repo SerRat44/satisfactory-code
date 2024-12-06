@@ -43,39 +43,30 @@ return function(dependencies)
 
             if not success then
                 print("Error in event processing: " .. tostring(e))
-                running = false -- Exit on error
+                running = false
                 break
             end
 
-            if e == "ChangeState" then
-                local powerAction = power.powerControls[s.Hash]
-                if powerAction then
-                    powerAction()
-                end
-            elseif e == "Trigger" then
-                if s == modules.factory.emergency_stop then
-                    monitoring:handleEmergencyStop()
-                else
-                    for i, button in ipairs(modules.factory.buttons) do
-                        if s == button then
-                            monitoring:handleButtonPress(i)
-                            break
-                        end
-                    end
-                end
-            elseif e == "NetworkMessage" then
-                handleNetworkMessage(type, data)
+            -- Wrap major operations in pcall for error logging
+            local successMonitor, monitorError = pcall(function()
+                monitoring:updateProductivityHistory()
+                monitoring:broadcastRefineryStatus()
+            end)
+            if not successMonitor then
+                print("Monitoring error: " .. tostring(monitorError))
+                running = false
+                break
             end
 
-            -- Update displays
-            monitoring:updateProductivityHistory()
-            power:updatePowerDisplays()
-            power:updatePowerIndicators()
-
-            -- Broadcast status
-            if dataCollectionActive then
-                monitoring:broadcastRefineryStatus()
+            local successPower, powerError = pcall(function()
+                power:updatePowerDisplays()
+                power:updatePowerIndicators()
                 power:broadcastPowerStatus()
+            end)
+            if not successPower then
+                print("Power error: " .. tostring(powerError))
+                running = false
+                break
             end
         end
 
