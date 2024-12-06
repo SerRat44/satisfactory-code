@@ -3,12 +3,19 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local Display = dependencies.display
+    local DisplayConstructor = dependencies.display
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
 
-    -- Print initial state
-    print("Initial Display type:", type(Display))
+    if not DisplayConstructor then
+        error("Display constructor not provided in dependencies")
+    end
+
+    -- Create the Display class with dependencies
+    local Display = DisplayConstructor({ colors = colors, config = config })
+    if not Display then
+        error("Failed to create Display class")
+    end
 
     -- Local variables for module state
     local dataCollectionActive = true
@@ -34,26 +41,39 @@ return function(dependencies)
         if not displayPanel then
             error("Display panel not found!")
         end
-        print("Display panel found:", type(displayPanel))
+
+        -- Debug panel object
+        print("Display panel type:", type(displayPanel))
+        print("Display panel methods:")
+        for k, v in pairs(displayPanel) do
+            print("  -", k, type(v))
+        end
+
+        if not displayPanel.getModule then
+            print("WARNING: getModule function not found on panel")
+            print("Panel component class:", displayPanel.getClass and displayPanel:getClass() or "unknown")
+        end
 
         -- Initialize display with the panel
         print("Creating display instance...")
-        if type(Display) == "function" then
-            print("Display is a function, executing it...")
-            Display = Display({ colors = colors, config = config })
-            print("After execution, Display is:", type(Display))
-        end
-
-        print("Creating new display instance...")
         display = Display:new(displayPanel)
-        print("Display instance created:", type(display))
         if not display then
             error("Failed to create display instance!")
         end
 
-        print("Display methods available:")
+        -- Debug display object
+        print("Display object type:", type(display))
+        print("Display methods:")
         for k, v in pairs(display) do
             print("  -", k, type(v))
+        end
+
+        print("Panel in display:", type(display.panel))
+        if display.panel then
+            print("Panel methods in display:")
+            for k, v in pairs(display.panel) do
+                print("  -", k, type(v))
+            end
         end
 
         print("Initializing display modules...")
@@ -62,15 +82,14 @@ return function(dependencies)
             error("Failed to initialize display modules!")
         end
 
+        -- Rest of the code remains the same...
         power = Power:new(modules, dependencies)
         monitoring = Monitoring:new(modules, dependencies)
 
         print("Initializing components...")
-        -- Initialize components
         power:initialize()
         monitoring:initialize()
 
-        -- Network setup
         net = computer.getPCIDevices(classes.NetworkCard)[1]
         if not net then
             error("Network card not found!")
@@ -81,14 +100,13 @@ return function(dependencies)
 
         print("Starting main control loop...")
         while running do
-            print("Waiting for event...")
             local success, e, s, sender, port, type, data = pcall(function()
                 return event.pull(config.UPDATE_INTERVAL)
             end)
 
             if not success then
                 print("Error during event pull: " .. tostring(e))
-                running = false -- Exit on error
+                running = false
                 break
             end
 
@@ -112,19 +130,15 @@ return function(dependencies)
                 handleNetworkMessage(type, data)
             end
 
-            -- Update displays
             monitoring:updateProductivityHistory()
             power:updatePowerDisplays()
             power:updatePowerIndicators()
 
-            -- Broadcast status
             if dataCollectionActive then
                 monitoring:broadcastRefineryStatus()
                 power:broadcastPowerStatus()
             end
         end
-
-        print("Exiting main control loop...")
     end
 
     return controlModule
