@@ -7,15 +7,8 @@ return function(dependencies)
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
 
-    if not DisplayConstructor then
-        error("Display constructor not provided in dependencies")
-    end
-
     -- Create the Display class with dependencies
     local Display = DisplayConstructor({ colors = colors, config = config })
-    if not Display then
-        error("Failed to create Display class")
-    end
 
     -- Local variables for module state
     local dataCollectionActive = true
@@ -36,43 +29,47 @@ return function(dependencies)
     -- Main control loop function
     controlModule.main = function()
         print("Initializing modules...")
-        -- Get the display panel first
+
+        -- Get the display panel
+        print("Looking for panel with ID:", config.COMPONENT_IDS.DISPLAY_PANEL)
         local displayPanel = component.proxy(config.COMPONENT_IDS.DISPLAY_PANEL)
         if not displayPanel then
             error("Display panel not found!")
         end
 
-        -- Debug panel object
-        print("Display panel type:", type(displayPanel))
-        print("Display panel class:", displayPanel.class)
-        print("Testing getModule...")
-        local testModule = pcall(function()
+        print("Panel found:", displayPanel ~= nil)
+
+        -- Try a direct test of the panel
+        local test_success, test_result = pcall(function()
             return displayPanel:getModule(0, 0, 0)
         end)
-        print("getModule test result:", testModule)
+        print("Direct panel test:", test_success)
 
-        -- Initialize display with the panel
+        -- Create display instance
         print("Creating display instance...")
-        display = Display:new(displayPanel)
-        if not display then
-            error("Failed to create display instance!")
+        local success, result = pcall(function()
+            display = Display:new(displayPanel)
+            return display
+        end)
+
+        if not success then
+            error("Failed to create display instance: " .. tostring(result))
         end
 
-        print("Display instance created")
-        print("Panel in display:", type(display.panel))
-        print("Panel class:", display.panel and display.panel.class)
-
         print("Initializing display modules...")
-        modules = display:initialize()
-        if not modules then
-            error("Failed to initialize display modules!")
+        success, result = pcall(function()
+            modules = display:initialize()
+            return modules
+        end)
+
+        if not success then
+            error("Failed to initialize display modules: " .. tostring(result))
         end
 
         power = Power:new(modules, dependencies)
         monitoring = Monitoring:new(modules, dependencies)
 
         print("Initializing components...")
-        -- Initialize components
         power:initialize()
         monitoring:initialize()
 
@@ -87,14 +84,13 @@ return function(dependencies)
 
         print("Starting main control loop...")
         while running do
-            print("Waiting for event...")
             local success, e, s, sender, port, type, data = pcall(function()
                 return event.pull(config.UPDATE_INTERVAL)
             end)
 
             if not success then
                 print("Error during event pull: " .. tostring(e))
-                running = false -- Exit on error
+                running = false
                 break
             end
 
@@ -118,19 +114,15 @@ return function(dependencies)
                 handleNetworkMessage(type, data)
             end
 
-            -- Update displays
             monitoring:updateProductivityHistory()
             power:updatePowerDisplays()
             power:updatePowerIndicators()
 
-            -- Broadcast status
             if dataCollectionActive then
                 monitoring:broadcastRefineryStatus()
                 power:broadcastPowerStatus()
             end
         end
-
-        print("Exiting main control loop...")
     end
 
     return controlModule
