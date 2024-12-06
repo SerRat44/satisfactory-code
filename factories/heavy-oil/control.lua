@@ -3,7 +3,7 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local DisplayConstructor = dependencies.display
+    local Display = dependencies.display -- This is the Display class, not an instance
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
 
@@ -32,8 +32,8 @@ return function(dependencies)
             error("Display panel not found!")
         end
 
-        -- Initialize display with the panel
-        display = DisplayConstructor.new(displayPanel)
+        -- Initialize display with the panel using the class's new method
+        display = Display:new(displayPanel)
         modules = display:initialize()
 
         power = Power:new(modules, dependencies)
