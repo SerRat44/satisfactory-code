@@ -21,6 +21,10 @@ return function(dependencies)
 
     -- Network setup
     local net = computer.getPCIDevices(classes.NetworkCard)[1]
+    if not net then
+        error("Network card not found!")
+    end
+    print("Network card found. Opening port 101...")
     net:open(101)
     event.listen(net)
 
@@ -39,6 +43,7 @@ return function(dependencies)
     function main()
         print("Starting main control loop...")
         while running do
+            print("Waiting for event...")
             local success, e, s, sender, port, type, data = pcall(function()
                 return event.pull(config.UPDATE_INTERVAL)
             end)
@@ -48,6 +53,8 @@ return function(dependencies)
                 running = false -- Exit on error
                 break
             end
+
+            print("Event received: " .. tostring(e))
 
             if e == "ChangeState" then
                 local powerAction = power.powerControls[s.Hash]
@@ -70,12 +77,14 @@ return function(dependencies)
             end
 
             -- Update displays
+            print("Updating displays...")
             monitoring:updateProductivityHistory()
             power:updatePowerDisplays()
             power:updatePowerIndicators()
 
             -- Broadcast status
             if dataCollectionActive then
+                print("Broadcasting status...")
                 monitoring:broadcastRefineryStatus()
                 power:broadcastPowerStatus()
             end
@@ -84,5 +93,6 @@ return function(dependencies)
         print("Exiting main control loop...")
     end
 
+    print("Calling main loop...")
     main()
 end
