@@ -6,8 +6,7 @@ local Power = {
     light_switch = nil,
     display = nil,
     powerControls = {},
-    networkCard = nil,
-    switchListeners = {} -- Add tracking for switch listeners
+    networkCard = nil
 }
 
 function Power:new(display, dependencies)
@@ -17,7 +16,6 @@ function Power:new(display, dependencies)
     instance.colors = dependencies.colors
     instance.utils = dependencies.utils
     instance.config = dependencies.config
-    instance.switchListeners = {} -- Initialize switch listeners table
 
     -- Initialize network card
     instance.networkCard = computer.getPCIDevices(classes.NetworkCard)[1]
@@ -29,9 +27,6 @@ function Power:new(display, dependencies)
 end
 
 function Power:initialize()
-    -- Clear any existing event listeners
-    self:clearEventListeners()
-
     -- Initialize switches
     self.power_switch = component.proxy(self.config.COMPONENT_IDS.POWER_SWITCH)
     self.battery_switch = component.proxy(self.config.COMPONENT_IDS.BATTERY_SWITCH)
@@ -41,65 +36,29 @@ function Power:initialize()
         error("Failed to initialize power switches")
     end
 
-    -- Setup initial switch states
-    self:setupInitialStates()
+    -- Setup initial switch states and controls
     self:setupPowerControls()
 
-    -- Register event listeners
-    self:registerEventListeners()
-end
+    -- Set up initial states for switches based on actual power switch positions
+    self.display.power.switches.MAIN.state = self.power_switch.isSwitchOn
+    self.display.power.switches.BATTERY.state = self.battery_switch.isSwitchOn
 
-function Power:clearEventListeners()
-    -- Remove any existing listeners
-    if self.switchListeners.main then
-        event.ignore(self.display.power.switches.MAIN)
-        self.switchListeners.main = nil
-    end
-    if self.switchListeners.battery then
-        event.ignore(self.display.power.switches.BATTERY)
-        self.switchListeners.battery = nil
-    end
-end
-
-function Power:setupInitialStates()
-    -- Set initial switch states based on actual switch positions
-    if self.display.power.switches.MAIN then
-        self.display.power.switches.MAIN.state = self.power_switch.isSwitchOn
-    end
-    if self.display.power.switches.BATTERY then
-        self.display.power.switches.BATTERY.state = self.battery_switch.isSwitchOn
-    end
-end
-
-function Power:registerEventListeners()
-    -- Register new listeners and store them
-    if self.display.power.switches.MAIN then
-        self.switchListeners.main = event.listen(self.display.power.switches.MAIN)
-    end
-    if self.display.power.switches.BATTERY then
-        self.switchListeners.battery = event.listen(self.display.power.switches.BATTERY)
-    end
+    -- Register event listeners for switches
+    event.listen(self.display.power.switches.MAIN)
+    event.listen(self.display.power.switches.BATTERY)
 end
 
 function Power:setupPowerControls()
     local function handleMainPowerSwitch()
-        if self.display.power.switches.MAIN then
-            local state = self.display.power.switches.MAIN.state
-            if self.power_switch then
-                self.power_switch:setIsSwitchOn(state)
-                self:updatePowerIndicators()
-            end
-        end
+        local state = self.display.power.switches.MAIN.state
+        self.power_switch:setIsSwitchOn(state)
+        self:updatePowerIndicators()
     end
 
     local function handleBatteryPowerSwitch()
-        if self.display.power.switches.BATTERY then
-            local state = self.display.power.switches.BATTERY.state
-            if self.battery_switch then
-                self.battery_switch:setIsSwitchOn(state)
-                self:updatePowerIndicators()
-            end
-        end
+        local state = self.display.power.switches.BATTERY.state
+        self.battery_switch:setIsSwitchOn(state)
+        self:updatePowerIndicators()
     end
 
     self.powerControls = {

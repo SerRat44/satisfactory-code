@@ -1,35 +1,7 @@
 -- factories/heavy-oil/control.lua
 return function(dependencies)
-    local colors = dependencies.colors
-    local utils = dependencies.utils
-    local config = dependencies.config
-    local DisplayConstructor = dependencies.display -- This is the constructor function
-    local Power = dependencies.power
-    local Monitoring = dependencies.monitoring
+    -- Previous initialization code remains the same...
 
-    -- Create the Display class
-    local Display = DisplayConstructor({ colors = colors, config = config })
-    if not Display then
-        error("Failed to create Display class")
-    end
-
-    -- Local variables for module state
-    local dataCollectionActive = true
-    local running = true
-    local display, power, monitoring, modules, networkCard
-
-    -- Create the control module table
-    local controlModule = {}
-
-    local function handleNetworkMessage(type, data)
-        if type == "collection" then
-            dataCollectionActive = data
-        else
-            power:handleNetworkMessage(type, data)
-        end
-    end
-
-    -- Main control loop function
     controlModule.main = function()
         print("Initializing modules...")
 
@@ -77,28 +49,31 @@ return function(dependencies)
 
             if not success then
                 print("Error during event pull: " .. tostring(e))
-                running = false
-                break
-            end
-
-            if e == "ChangeState" then
-                local powerAction = power.powerControls[s.Hash]
-                if powerAction then
-                    powerAction()
+                -- Try to reinitialize power module on error
+                if power then
+                    print("Attempting to reinitialize power module...")
+                    pcall(function() power:initialize() end)
                 end
-            elseif e == "Trigger" then
-                if s == modules.factory.emergency_stop then
-                    monitoring:handleEmergencyStop()
-                else
-                    for i, button in ipairs(modules.factory.buttons) do
-                        if s == button then
-                            monitoring:handleButtonPress(i)
-                            break
+            else
+                if e == "ChangeState" and s and s.Hash then
+                    local powerAction = power.powerControls[s.Hash]
+                    if powerAction then
+                        powerAction()
+                    end
+                elseif e == "Trigger" then
+                    if s == modules.factory.emergency_stop then
+                        monitoring:handleEmergencyStop()
+                    else
+                        for i, button in ipairs(modules.factory.buttons) do
+                            if s == button then
+                                monitoring:handleButtonPress(i)
+                                break
+                            end
                         end
                     end
+                elseif e == "NetworkMessage" then
+                    handleNetworkMessage(type, data)
                 end
-            elseif e == "NetworkMessage" then
-                handleNetworkMessage(type, data)
             end
 
             monitoring:updateProductivityHistory()
