@@ -39,8 +39,7 @@ return function(dependencies)
         end
     end
 
-    -- Main control loop
-    function main()
+    local function main()
         print("Starting main control loop...")
         while running do
             print("Waiting for event...")
@@ -93,6 +92,5 @@ return function(dependencies)
         print("Exiting main control loop...")
     end
 
-    print("Calling main loop...")
-    main()
+    return { main = main } -- Explicitly return main for direct invocation
 end
