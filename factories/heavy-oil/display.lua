@@ -61,21 +61,22 @@ return function(dependencies)
         if not display_panel then
             error("Display panel is required")
         end
-        if not display_panel.getModule then
-            error("Display panel must have getModule method")
+
+        -- Don't check for getModule directly since it might not be visible that way
+        local test_success = pcall(function()
+            -- Try to actually use getModule instead of checking for its existence
+            display_panel:getModule(0, 0, 0)
+        end)
+
+        if not test_success then
+            error("Display panel does not support getModule method")
         end
 
         local instance = {}
         setmetatable(instance, { __index = self })
         instance.panel = display_panel
 
-        -- Test the panel immediately
-        local test = pcall(function()
-            local module = instance.panel:getModule(0, 0, 0)
-            print("Test module fetch:", module ~= nil)
-        end)
-        print("Panel test result:", test)
-
+        print("Display instance created with panel")
         return instance
     end
 
