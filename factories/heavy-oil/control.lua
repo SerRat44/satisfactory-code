@@ -92,7 +92,7 @@ return function(dependencies)
         print("Exiting main control loop...")
     end
 
-    -- Explicitly return an object exposing the main function
+    -- Explicitly return a table with the main function
     return {
         main = main
     }
