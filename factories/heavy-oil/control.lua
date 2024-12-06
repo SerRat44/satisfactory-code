@@ -1,21 +1,9 @@
 -- factories/heavy-oil/control.lua
 return function(dependencies)
-    -- Print out what we received
-    print("Dependencies received:")
-    for k, v in pairs(dependencies) do
-        print(k, type(v))
-    end
-    print("Display class:", dependencies.display)
-    if dependencies.display then
-        print("Display class type:", type(dependencies.display))
-        for k, v in pairs(dependencies.display) do
-            print("  -", k, type(v))
-        end
-    end
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local Display = dependencies.display -- This is the Display class itself
+    local Display = dependencies.display -- This is the Display class constructor
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
 
@@ -46,8 +34,15 @@ return function(dependencies)
 
         -- Initialize display with the panel
         print("Creating display instance...")
-        display = setmetatable({}, { __index = Display })
-        display.panel = displayPanel
+        if type(Display) == "function" then
+            -- If Display is still a function, execute it to get the class
+            Display = Display({ colors = colors, config = config })
+        end
+
+        display = Display:new(displayPanel)
+        if not display then
+            error("Failed to create display instance!")
+        end
 
         print("Initializing display modules...")
         modules = display:initialize()
