@@ -86,7 +86,8 @@ function Monitoring:updateProductivityHistory()
                 self:updateGaugeColor(self.display.factory.gauges[i], prod)
             else
                 self.display.factory.gauges[i].percent = 0
-                self.utils.setComponentBackgroundColor(self.display.factory.gauges[i], self.colors.STATUS.OFF)
+                self.utils.setComponentColor(self.display.factory.gauges[i], self.colors.STATUS.OFF, self.colors.EMIT
+                    .GAUGE)
             end
         end
 
@@ -179,11 +180,11 @@ function Monitoring:updateGaugeColor(gauge, percent)
     if not gauge then return end
 
     if percent >= 95 then
-        self.utils.setComponentBackgroundColor(gauge, self.colors.STATUS.WORKING)
+        self.utils.setComponentColor(gauge, self.colors.STATUS.WORKING, self.colors.EMIT.GAUGE)
     elseif percent >= 75 then
-        self.utils.setComponentBackgroundColor(gauge, self.colors.STATUS.WARNING)
+        self.utils.setComponentColor(gauge, self.colors.STATUS.WARNING, self.colors.EMIT.GAUGE)
     else
-        self.utils.setComponentBackgroundColor(gauge, self.colors.STATUS.IDLE)
+        self.utils.setComponentColor(gauge, self.colors.STATUS.IDLE, self.colors.EMIT.GAUGE)
     end
 end
 
@@ -199,9 +200,7 @@ function Monitoring:getRefineryStatus(refinery)
 
     local productivity = tonumber(refinery.productivity) or 0
 
-    if productivity < 5 then
-        return "OFF"
-    elseif productivity < 75 then
+    if productivity < 75 then
         return "WARNING"
     elseif productivity < 95 then
         return "IDLE"
