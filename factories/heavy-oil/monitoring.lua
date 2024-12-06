@@ -5,7 +5,8 @@ local Monitoring = {
     productivity_history = {},
     current_productivity = 0,
     emergency_state = false,
-    display = nil
+    display = nil,
+    networkCard = nil -- Add network card property
 }
 
 function Monitoring:new(display, dependencies)
@@ -16,6 +17,13 @@ function Monitoring:new(display, dependencies)
     instance.utils = dependencies.utils
     instance.config = dependencies.config
     instance.productivity_history = {}
+
+    -- Initialize network card
+    instance.networkCard = computer.getPCIDevices(classes.NetworkCard)[1]
+    if not instance.networkCard then
+        error("Network card not found in Monitoring module")
+    end
+
     return instance
 end
 
@@ -179,9 +187,11 @@ function Monitoring:getRefineryStatus(refinery)
 end
 
 function Monitoring:broadcastRefineryStatus()
+    if not self.networkCard then return end -- Skip if no network card
+
     for i, refinery in ipairs(self.refineries) do
         local status = self:getRefineryStatus(refinery)
-        net:broadcast(100, "refinery_update", {
+        self.networkCard:broadcast(100, "refinery_update", {
             "refinery_" .. i,
             status,
             refinery.productivity
