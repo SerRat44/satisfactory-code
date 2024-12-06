@@ -1,23 +1,4 @@
-local GITHUB_URL = "https://raw.githubusercontent.com/SerRat44/satisfactory-code/main"
-local FACTORY_NAME = "heavy-oil"
-local internet = computer.getPCIDevices(classes.Build_InternetCard_C)[1]
-
-function downloadFromGithub(path)
-    local url = GITHUB_URL .. "/" .. path
-    print("Trying to download: " .. url)
-
-    local request = internet:request(url, "GET", "")
-    print("Request sent, awaiting response...")
-
-    local result, data, headers = request:await()
-
-    if result == 200 then
-        print("Downloaded successfully: " .. path)
-        return data
-    else
-        error("Download failed for " .. path .. ": " .. (result or "unknown error"))
-    end
-end
+-- Now let's fix the loader.lua (the main script)
 
 function loadFiles()
     print("Starting file downloads...")
@@ -39,7 +20,7 @@ function loadFiles()
     local utils = utilsFn()
     print("Utils loaded successfully")
 
-    -- Load factory specific files
+    -- Load factory-specific files
     local base_path = "factories/" .. FACTORY_NAME .. "/"
 
     print("Loading config.lua...")
@@ -81,39 +62,23 @@ function loadFiles()
     local controlFn, err = load(controlData)
     if not controlFn then error("Failed to compile control.lua: " .. err) end
 
-    -- Create environment with all loaded modules
-    local env = {
+    -- Initialize control with all dependencies
+    local controlModule = controlFn({
         colors = colors,
         utils = utils,
         config = config,
         display = display,
         power = power,
-        monitoring = monitoring,
-        computer = computer,
-        component = component,
-        event = event,
-        error = error,
-        print = print,
-        string = string,
-        math = math,
-        table = table,
-        pairs = pairs,
-        ipairs = ipairs,
-        type = type,
-        tostring = tostring,
-        tonumber = tonumber,
-    }
+        monitoring = monitoring
+    })
 
-    -- Run control with the local environment
-    print("Setting up environment...")
-    local success, err = pcall(function()
-        local _ENV = env
-        controlFn()
-    end)
-
-    if not success then
-        error("Control execution failed: " .. tostring(err))
+    if type(controlModule) ~= "table" or type(controlModule.main) ~= "function" then
+        error("Control module is not properly formatted - expected table with main function")
     end
+
+    -- Start the main control loop
+    print("Starting control main loop...")
+    controlModule.main()
 end
 
 -- Start the loader with error handling

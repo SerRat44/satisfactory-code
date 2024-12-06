@@ -1,3 +1,5 @@
+-- factories/heavy-oil/control.lua
+
 return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
@@ -6,32 +8,43 @@ return function(dependencies)
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
 
-    print("Initializing modules...")
-    -- Initialize modules
-    local display = Display:new(component.proxy(config.COMPONENT_IDS.DISPLAY_PANEL))
-    local modules = display:initialize()
+    -- Create a module table to store our functions and state
+    local controlModule = {}
 
-    local power = Power:new(modules, dependencies)
-    local monitoring = Monitoring:new(modules, dependencies)
-
-    print("Initializing components...")
-    -- Initialize components
-    power:initialize()
-    monitoring:initialize()
-
-    -- Network setup
-    local net = computer.getPCIDevices(classes.NetworkCard)[1]
-    if not net then
-        error("Network card not found!")
-    end
-    print("Network card found. Opening port 101...")
-    net:open(101)
-    event.listen(net)
-
+    -- Initialize state variables
     local dataCollectionActive = true
-    local running = true -- Flag to control the loop
+    local running = true
+    local net = nil
+    local display = nil
+    local power = nil
+    local monitoring = nil
+    local modules = nil
 
-    function handleNetworkMessage(type, data)
+    function controlModule.initialize()
+        print("Initializing modules...")
+        -- Initialize modules
+        display = Display:new(component.proxy(config.COMPONENT_IDS.DISPLAY_PANEL))
+        modules = display:initialize()
+
+        power = Power:new(modules, dependencies)
+        monitoring = Monitoring:new(modules, dependencies)
+
+        print("Initializing components...")
+        -- Initialize components
+        power:initialize()
+        monitoring:initialize()
+
+        -- Network setup
+        net = computer.getPCIDevices(classes.NetworkCard)[1]
+        if not net then
+            error("Network card not found!")
+        end
+        print("Network card found. Opening port 101...")
+        net:open(101)
+        event.listen(net)
+    end
+
+    local function handleNetworkMessage(type, data)
         if type == "collection" then
             dataCollectionActive = data
         else
@@ -39,7 +52,10 @@ return function(dependencies)
         end
     end
 
-    local function main()
+    function controlModule.main()
+        -- Initialize everything first
+        controlModule.initialize()
+
         print("Starting main control loop...")
         while running do
             print("Waiting for event...")
@@ -92,8 +108,6 @@ return function(dependencies)
         print("Exiting main control loop...")
     end
 
-    -- Explicitly return a table with the main function
-    return {
-        main = main
-    }
+    -- Return the module with the exposed main function
+    return controlModule
 end
