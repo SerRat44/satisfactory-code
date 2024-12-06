@@ -5,7 +5,8 @@ local Power = {
     battery_switch = nil,
     light_switch = nil,
     display = nil,
-    powerControls = {}
+    powerControls = {},
+    networkCard = nil -- Add network card property
 }
 
 function Power:new(display, dependencies)
@@ -15,6 +16,13 @@ function Power:new(display, dependencies)
     instance.colors = dependencies.colors
     instance.utils = dependencies.utils
     instance.config = dependencies.config
+
+    -- Initialize network card
+    instance.networkCard = computer.getPCIDevices(classes.NetworkCard)[1]
+    if not instance.networkCard then
+        error("Network card not found in Power module")
+    end
+
     return instance
 end
 
@@ -174,25 +182,27 @@ function Power:broadcastPowerStatus()
     local factory_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
     local battery_circuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
 
-    net:broadcast(100, "power_update", {
-        grid = {
-            production = main_circuit.production,
-            consumption = main_circuit.consumption,
-            isFused = main_circuit.isFuesed,
-            isOn = self.power_switch.isSwitchOn
-        },
-        factory = {
-            consumption = factory_circuit.consumption,
-            isFused = factory_circuit.isFuesed
-        },
-        battery = {
-            storePercent = battery_circuit.batteryStorePercent,
-            timeUntilEmpty = battery_circuit.batteryTimeUntilEmpty,
-            timeUntilFull = battery_circuit.batteryTimeUntilFull,
-            isOn = self.battery_switch.isSwitchOn,
-            isFused = battery_circuit.isFuesed
-        }
-    })
+    if self.networkCard then
+        self.networkCard:broadcast(100, "power_update", {
+            grid = {
+                production = main_circuit.production,
+                consumption = main_circuit.consumption,
+                isFused = main_circuit.isFuesed,
+                isOn = self.power_switch.isSwitchOn
+            },
+            factory = {
+                consumption = factory_circuit.consumption,
+                isFused = factory_circuit.isFuesed
+            },
+            battery = {
+                storePercent = battery_circuit.batteryStorePercent,
+                timeUntilEmpty = battery_circuit.batteryTimeUntilEmpty,
+                timeUntilFull = battery_circuit.batteryTimeUntilFull,
+                isOn = self.battery_switch.isSwitchOn,
+                isFused = battery_circuit.isFuesed
+            }
+        })
+    end
 end
 
 function Power:handleNetworkMessage(type, data)
