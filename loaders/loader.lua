@@ -1,33 +1,40 @@
--- loaders/loader.lua
-
-local GITHUB_RAW_URL = "https://raw.githubusercontent.com/yourusername/satisfactory-networks/main"
+local GITHUB_URL = "https://raw.githubusercontent.com/SerRat44/satisfactory-code/main"
 local FACTORY_NAME = "heavy-oil"  -- Change this for different factories
-
-local internet = computer.getPCIDevices(classes.InternetCard)[1]
+local internet = computer.getPCIDevices(classes.Build_InternetCard_C)[1]
 
 function downloadFromGithub(path)
-    local url = GITHUB_RAW_URL .. "/" .. path
-    local response = internet:request(url)
+    local url = GITHUB_URL .. "/" .. path
+    local future = internet:request(url, "GET", "")
     
-    if response.status == 200 then
-        return response.data
+    -- Wait for the response
+    while not future.isDone do
+        event.pull(0.1)
+    end
+    
+    local response = future.data
+    if response then
+        return response
     else 
-        error("Failed to download " .. path .. ": " .. response.status)
+        error("Failed to download " .. path)
     end
 end
 
 function loadFiles()
+    print("Loading files...")
     -- Load common files
-    local colors = loadstring(downloadFromGithub("common/colors.lua"))()
-    local utils = loadstring(downloadFromGithub("common/utils.lua"))()
+    local colors = load(downloadFromGithub("common/colors.lua"))()
+    print("Loaded colors")
+    local utils = load(downloadFromGithub("common/utils.lua"))()
+    print("Loaded utils")
     
     -- Load factory specific files
     local base_path = "factories/" .. FACTORY_NAME .. "/"
-    local config = loadstring(downloadFromGithub(base_path .. "config.lua"))()
-    local display = loadstring(downloadFromGithub(base_path .. "display.lua"))()
-    local power = loadstring(downloadFromGithub(base_path .. "power.lua"))()
-    local monitoring = loadstring(downloadFromGithub(base_path .. "monitoring.lua"))()
-    local control = loadstring(downloadFromGithub(base_path .. "control.lua"))()
+    local config = load(downloadFromGithub(base_path .. "config.lua"))()
+    print("Loaded config")
+    local display = load(downloadFromGithub(base_path .. "display.lua"))()
+    local power = load(downloadFromGithub(base_path .. "power.lua"))()
+    local monitoring = load(downloadFromGithub(base_path .. "monitoring.lua"))()
+    local control = load(downloadFromGithub(base_path .. "control.lua"))()
     
     -- Create environment with loaded modules
     local env = {
