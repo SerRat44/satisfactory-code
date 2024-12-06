@@ -10,6 +10,15 @@ return {
         end
     end,
 
+    setComponentBackgroundColor = function(component, color)
+        if component then
+            local r = color[1] / 255
+            local g = color[2] / 255
+            local b = color[3] / 255
+            component:setColor(r, g, b)
+        end
+    end,
+
     formatFlowDisplay = function(flow)
         if flow == 0 then return "0" end
         return tostring(math.floor(flow))
