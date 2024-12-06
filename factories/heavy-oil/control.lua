@@ -3,9 +3,12 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local Display = dependencies.display -- This is the Display class constructor
+    local Display = dependencies.display
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
+
+    -- Print initial state
+    print("Initial Display type:", type(Display))
 
     -- Local variables for module state
     local dataCollectionActive = true
@@ -31,17 +34,26 @@ return function(dependencies)
         if not displayPanel then
             error("Display panel not found!")
         end
+        print("Display panel found:", type(displayPanel))
 
         -- Initialize display with the panel
         print("Creating display instance...")
         if type(Display) == "function" then
-            -- If Display is still a function, execute it to get the class
+            print("Display is a function, executing it...")
             Display = Display({ colors = colors, config = config })
+            print("After execution, Display is:", type(Display))
         end
 
+        print("Creating new display instance...")
         display = Display:new(displayPanel)
+        print("Display instance created:", type(display))
         if not display then
             error("Failed to create display instance!")
+        end
+
+        print("Display methods available:")
+        for k, v in pairs(display) do
+            print("  -", k, type(v))
         end
 
         print("Initializing display modules...")
