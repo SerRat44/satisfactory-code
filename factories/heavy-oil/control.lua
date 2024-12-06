@@ -3,7 +3,7 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local DisplayConstructor = dependencies.display -- This is the constructor function
+    local DisplayConstructor = dependencies.display
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
 
@@ -26,8 +26,14 @@ return function(dependencies)
     -- Main control loop function
     controlModule.main = function()
         print("Initializing modules...")
-        -- Initialize modules
-        display = DisplayConstructor({ colors = colors, config = config }) -- Create Display instance
+        -- Get the display panel first
+        local displayPanel = component.proxy(config.COMPONENT_IDS.DISPLAY_PANEL)
+        if not displayPanel then
+            error("Display panel not found!")
+        end
+
+        -- Initialize display with the panel
+        display = DisplayConstructor.new(displayPanel)
         modules = display:initialize()
 
         power = Power:new(modules, dependencies)

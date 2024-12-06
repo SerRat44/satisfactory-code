@@ -153,5 +153,10 @@ return function(dependencies)
         self.modules.power.POWER_DISPLAYS.FACTORY_USED = self.panel:getModule(5, 3, 2)
     end
 
-    return Display
+    -- Return the Display class itself
+    return {
+        new = function(panel)
+            return Display:new(panel)
+        end
+    }
 end
