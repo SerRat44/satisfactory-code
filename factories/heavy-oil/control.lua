@@ -3,9 +3,15 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local Display = dependencies.display
+    local DisplayConstructor = dependencies.display -- This is the constructor function
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
+
+    -- Create the Display class
+    local Display = DisplayConstructor({ colors = colors, config = config })
+    if not Display then
+        error("Failed to create Display class")
+    end
 
     -- Local variables for module state
     local dataCollectionActive = true
@@ -36,8 +42,15 @@ return function(dependencies)
         -- Initialize display with the panel
         print("Creating display instance...")
         display = Display:new(displayPanel)
+        if not display then
+            error("Failed to create display instance")
+        end
+
         print("Initializing display modules...")
         modules = display:initialize()
+        if not modules then
+            error("Failed to initialize display modules")
+        end
 
         -- Get network card early
         networkCard = computer.getPCIDevices(classes.NetworkCard)[1]
