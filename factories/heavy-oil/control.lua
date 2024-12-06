@@ -1,5 +1,4 @@
 -- factories/heavy-oil/control.lua
-
 return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
@@ -8,19 +7,24 @@ return function(dependencies)
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
 
-    -- Create a module table to store our functions and state
-    local controlModule = {}
-
-    -- Initialize state variables
+    -- Local variables for module state
     local dataCollectionActive = true
     local running = true
-    local net = nil
-    local display = nil
-    local power = nil
-    local monitoring = nil
-    local modules = nil
+    local display, power, monitoring, modules, net
 
-    function controlModule.initialize()
+    -- Create the control module table
+    local controlModule = {}
+
+    local function handleNetworkMessage(type, data)
+        if type == "collection" then
+            dataCollectionActive = data
+        else
+            power:handleNetworkMessage(type, data)
+        end
+    end
+
+    -- Main control loop function
+    controlModule.main = function()
         print("Initializing modules...")
         -- Initialize modules
         display = Display:new(component.proxy(config.COMPONENT_IDS.DISPLAY_PANEL))
@@ -42,19 +46,6 @@ return function(dependencies)
         print("Network card found. Opening port 101...")
         net:open(101)
         event.listen(net)
-    end
-
-    local function handleNetworkMessage(type, data)
-        if type == "collection" then
-            dataCollectionActive = data
-        else
-            power:handleNetworkMessage(type, data)
-        end
-    end
-
-    function controlModule.main()
-        -- Initialize everything first
-        controlModule.initialize()
 
         print("Starting main control loop...")
         while running do
@@ -108,6 +99,5 @@ return function(dependencies)
         print("Exiting main control loop...")
     end
 
-    -- Return the module with the exposed main function
     return controlModule
 end
