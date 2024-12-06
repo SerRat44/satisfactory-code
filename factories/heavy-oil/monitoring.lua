@@ -1,9 +1,5 @@
 -- factories/heavy-oil/monitoring.lua
 
-local colors = require('common.colors')
-local utils = require('common.utils')
-local config = require('config')
-
 local Monitoring = {
     refineries = {},
     productivity_history = {},
@@ -12,21 +8,24 @@ local Monitoring = {
     display = nil
 }
 
-function Monitoring:new(display)
+function Monitoring:new(display, dependencies)
     local instance = {}
     setmetatable(instance, { __index = self })
     instance.display = display
+    instance.colors = dependencies.colors
+    instance.utils = dependencies.utils
+    instance.config = dependencies.config
     instance.productivity_history = {}
     return instance
 end
 
 function Monitoring:initialize()
-    for i, id in ipairs(config.REFINERY_IDS) do
+    for i, id in ipairs(self.config.REFINERY_IDS) do
         self.refineries[i] = component.proxy(id)
     end
 
     event.listen(self.display.factory.emergency_stop)
-    utils.setComponentColor(self.display.factory.emergency_stop, colors.STATUS.OFF, colors.EMIT.OFF)
+    self.utils.setComponentColor(self.display.factory.emergency_stop, self.colors.STATUS.OFF, self.colors.EMIT.OFF)
 end
 
 function Monitoring:handleEmergencyStop()
@@ -38,12 +37,14 @@ function Monitoring:handleEmergencyStop()
                 refinery.standby = true
             end
         end
-        utils.setComponentColor(self.display.factory.emergency_stop, colors.STATUS.OFF, colors.EMIT.BUTTON)
-        utils.setComponentColor(self.display.factory.health_indicator, colors.STATUS.OFF, colors.EMIT.INDICATOR)
+        self.utils.setComponentColor(self.display.factory.emergency_stop, self.colors.STATUS.OFF, self.colors.EMIT
+            .BUTTON)
+        self.utils.setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.OFF,
+            self.colors.EMIT.INDICATOR)
         self.light_switch.colorSlot = 1
     else
         self.light_switch.colorSlot = 6
-        utils.setComponentColor(self.display.factory.emergency_stop, colors.STATUS.OFF, colors.EMIT.OFF)
+        self.utils.setComponentColor(self.display.factory.emergency_stop, self.colors.STATUS.OFF, self.colors.EMIT.OFF)
         for _, refinery in ipairs(self.refineries) do
             if refinery then
                 refinery.standby = false
@@ -67,12 +68,13 @@ function Monitoring:updateProductivityHistory()
                 self:updateGaugeColor(self.display.factory.gauges[i], prod)
             else
                 self.display.factory.gauges[i].percent = 0
-                utils.setComponentColor(self.display.factory.gauges[i], colors.STATUS.OFF, colors.EMIT.GAUGE)
+                self.utils.setComponentColor(self.display.factory.gauges[i], self.colors.STATUS.OFF,
+                    self.colors.EMIT.GAUGE)
             end
         end
     end
 
-    if #self.productivity_history > config.HISTORY_LENGTH then
+    if #self.productivity_history > self.config.HISTORY_LENGTH then
         table.remove(self.productivity_history, 1)
     end
 
@@ -101,14 +103,18 @@ end
 
 function Monitoring:updateProductivityIndicator()
     if self.emergency_state then
-        utils.setComponentColor(self.display.factory.health_indicator, colors.STATUS.OFF, colors.EMIT.INDICATOR)
+        self.utils.setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.OFF,
+            self.colors.EMIT.INDICATOR)
     else
         if self.current_productivity >= 95 then
-            utils.setComponentColor(self.display.factory.health_indicator, colors.STATUS.WORKING, colors.EMIT.INDICATOR)
+            self.utils.setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.WORKING,
+                self.colors.EMIT.INDICATOR)
         elseif self.current_productivity >= 50 then
-            utils.setComponentColor(self.display.factory.health_indicator, colors.STATUS.WARNING, colors.EMIT.INDICATOR)
+            self.utils.setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.WARNING,
+                self.colors.EMIT.INDICATOR)
         else
-            utils.setComponentColor(self.display.factory.health_indicator, colors.STATUS.IDLE, colors.EMIT.INDICATOR)
+            self.utils.setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.IDLE,
+                self.colors.EMIT.INDICATOR)
         end
     end
 end
@@ -125,13 +131,17 @@ function Monitoring:updateButtonColor(index)
     if self.display.factory.buttons[index] and self.refineries[index] then
         local status = self:getRefineryStatus(self.refineries[index])
         if status == "OFF" then
-            utils.setComponentColor(self.display.factory.buttons[index], colors.STATUS.OFF, colors.EMIT.BUTTON)
+            self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.OFF,
+                self.colors.EMIT.BUTTON)
         elseif status == "IDLE" then
-            utils.setComponentColor(self.display.factory.buttons[index], colors.STATUS.WARNING, colors.EMIT.BUTTON)
+            self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.WARNING,
+                self.colors.EMIT.BUTTON)
         elseif status == "WARNING" then
-            utils.setComponentColor(self.display.factory.buttons[index], colors.STATUS.WARNING, colors.EMIT.BUTTON)
+            self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.WARNING,
+                self.colors.EMIT.BUTTON)
         else
-            utils.setComponentColor(self.display.factory.buttons[index], colors.STATUS.WORKING, colors.EMIT.BUTTON)
+            self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.WORKING,
+                self.colors.EMIT.BUTTON)
         end
     end
 end
@@ -140,11 +150,11 @@ function Monitoring:updateGaugeColor(gauge, percent)
     if not gauge then return end
 
     if percent >= 95 then
-        utils.setComponentColor(gauge, colors.STATUS.WORKING, colors.EMIT.GAUGE)
+        self.utils.setComponentColor(gauge, self.colors.STATUS.WORKING, self.colors.EMIT.GAUGE)
     elseif percent >= 50 then
-        utils.setComponentColor(gauge, colors.STATUS.WARNING, colors.EMIT.GAUGE)
+        self.utils.setComponentColor(gauge, self.colors.STATUS.WARNING, self.colors.EMIT.GAUGE)
     else
-        utils.setComponentColor(gauge, colors.STATUS.IDLE, colors.EMIT.GAUGE)
+        self.utils.setComponentColor(gauge, self.colors.STATUS.IDLE, self.colors.EMIT.GAUGE)
     end
 end
 
