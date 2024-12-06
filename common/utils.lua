@@ -15,7 +15,7 @@ return {
             local r = color[1] / 255
             local g = color[2] / 255
             local b = color[3] / 255
-            component:setColor(r, g, b)
+            component:setBackgroundColor(r, g, b)
         end
     end,
 
