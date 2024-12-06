@@ -3,7 +3,7 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local Display = dependencies.display -- This is the Display class
+    local Display = dependencies.display -- This is the Display class itself
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
 
@@ -34,10 +34,8 @@ return function(dependencies)
 
         -- Initialize display with the panel
         print("Creating display instance...")
-        display = Display:new(displayPanel) -- Use the class's new method directly
-        if not display then
-            error("Failed to create display instance!")
-        end
+        display = setmetatable({}, { __index = Display })
+        display.panel = displayPanel
 
         print("Initializing display modules...")
         modules = display:initialize()
