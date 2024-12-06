@@ -6,6 +6,7 @@ return function(dependencies)
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
 
+    print("Initializing modules...")
     -- Initialize modules
     local display = Display:new(component.proxy(config.COMPONENT_IDS.DISPLAY_PANEL))
     local modules = display:initialize()
@@ -13,6 +14,7 @@ return function(dependencies)
     local power = Power:new(modules, dependencies)
     local monitoring = Monitoring:new(modules, dependencies)
 
+    print("Initializing components...")
     -- Initialize components
     power:initialize()
     monitoring:initialize()
@@ -23,7 +25,7 @@ return function(dependencies)
     event.listen(net)
 
     local dataCollectionActive = true
-    local running = true -- Add a flag to control the loop
+    local running = true -- Flag to control the loop
 
     function handleNetworkMessage(type, data)
         if type == "collection" then
@@ -42,31 +44,40 @@ return function(dependencies)
             end)
 
             if not success then
-                print("Error in event processing: " .. tostring(e))
-                running = false
+                print("Error during event pull: " .. tostring(e))
+                running = false -- Exit on error
                 break
             end
 
-            -- Wrap major operations in pcall for error logging
-            local successMonitor, monitorError = pcall(function()
-                monitoring:updateProductivityHistory()
+            if e == "ChangeState" then
+                local powerAction = power.powerControls[s.Hash]
+                if powerAction then
+                    powerAction()
+                end
+            elseif e == "Trigger" then
+                if s == modules.factory.emergency_stop then
+                    monitoring:handleEmergencyStop()
+                else
+                    for i, button in ipairs(modules.factory.buttons) do
+                        if s == button then
+                            monitoring:handleButtonPress(i)
+                            break
+                        end
+                    end
+                end
+            elseif e == "NetworkMessage" then
+                handleNetworkMessage(type, data)
+            end
+
+            -- Update displays
+            monitoring:updateProductivityHistory()
+            power:updatePowerDisplays()
+            power:updatePowerIndicators()
+
+            -- Broadcast status
+            if dataCollectionActive then
                 monitoring:broadcastRefineryStatus()
-            end)
-            if not successMonitor then
-                print("Monitoring error: " .. tostring(monitorError))
-                running = false
-                break
-            end
-
-            local successPower, powerError = pcall(function()
-                power:updatePowerDisplays()
-                power:updatePowerIndicators()
                 power:broadcastPowerStatus()
-            end)
-            if not successPower then
-                print("Power error: " .. tostring(powerError))
-                running = false
-                break
             end
         end
 
