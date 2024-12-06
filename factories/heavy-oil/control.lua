@@ -92,5 +92,8 @@ return function(dependencies)
         print("Exiting main control loop...")
     end
 
-    return { main = main } -- Explicitly return main for direct invocation
+    -- Explicitly return an object exposing the main function
+    return {
+        main = main
+    }
 end
