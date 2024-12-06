@@ -1,5 +1,4 @@
 -- factories/heavy-oil/display.lua
-
 return function(dependencies)
     local colors = dependencies.colors
     local config = dependencies.config
@@ -58,17 +57,20 @@ return function(dependencies)
     }
 
     function Display:new(display_panel)
+        print("Creating new display instance...")
         if not display_panel then
             error("Display panel is required")
         end
 
-        -- Don't check for getModule directly since it might not be visible that way
-        local test_success = pcall(function()
-            -- Try to actually use getModule instead of checking for its existence
-            display_panel:getModule(0, 0, 0)
+        -- Test the panel immediately
+        print("Testing panel in new()...")
+        local success = pcall(function()
+            local test_module = display_panel:getModule(0, 0, 0)
+            print("Test module retrieved:", test_module ~= nil)
         end)
+        print("Panel test result:", success)
 
-        if not test_success then
+        if not success then
             error("Display panel does not support getModule method")
         end
 
@@ -76,11 +78,18 @@ return function(dependencies)
         setmetatable(instance, { __index = self })
         instance.panel = display_panel
 
-        print("Display instance created with panel")
         return instance
     end
 
     function Display:initialize()
+        print("Starting display initialization...")
+        -- Test panel at start of initialize
+        local test = pcall(function()
+            local module = self.panel:getModule(0, 0, 0)
+            print("Initialize test module:", module ~= nil)
+        end)
+        print("Initialize panel test:", test)
+
         -- Factory panel initialization
         self:initializeFactoryModules()
         self:initializeFlowModules()
@@ -169,10 +178,5 @@ return function(dependencies)
         self.modules.power.POWER_DISPLAYS.FACTORY_USED = self.panel:getModule(5, 3, 2)
     end
 
-    -- Return the Display class itself
-    return {
-        new = function(panel)
-            return Display:new(panel)
-        end
-    }
+    return Display
 end
