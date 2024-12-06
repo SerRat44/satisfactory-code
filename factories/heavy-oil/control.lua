@@ -3,17 +3,14 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local DisplayConstructor = dependencies.display
+    local Display = dependencies.display
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
-
-    -- Create the Display class with dependencies
-    local Display = DisplayConstructor({ colors = colors, config = config })
 
     -- Local variables for module state
     local dataCollectionActive = true
     local running = true
-    local display, power, monitoring, modules, net
+    local display, power, monitoring, modules, networkCard
 
     -- Create the control module table
     local controlModule = {}
@@ -30,40 +27,22 @@ return function(dependencies)
     controlModule.main = function()
         print("Initializing modules...")
 
-        -- Get the display panel
-        print("Looking for panel with ID:", config.COMPONENT_IDS.DISPLAY_PANEL)
+        -- Get the display panel first
         local displayPanel = component.proxy(config.COMPONENT_IDS.DISPLAY_PANEL)
         if not displayPanel then
             error("Display panel not found!")
         end
 
-        print("Panel found:", displayPanel ~= nil)
-
-        -- Try a direct test of the panel
-        local test_success, test_result = pcall(function()
-            return displayPanel:getModule(0, 0, 0)
-        end)
-        print("Direct panel test:", test_success)
-
-        -- Create display instance
+        -- Initialize display with the panel
         print("Creating display instance...")
-        local success, result = pcall(function()
-            display = Display:new(displayPanel)
-            return display
-        end)
-
-        if not success then
-            error("Failed to create display instance: " .. tostring(result))
-        end
-
+        display = Display:new(displayPanel)
         print("Initializing display modules...")
-        success, result = pcall(function()
-            modules = display:initialize()
-            return modules
-        end)
+        modules = display:initialize()
 
-        if not success then
-            error("Failed to initialize display modules: " .. tostring(result))
+        -- Get network card early
+        networkCard = computer.getPCIDevices(classes.NetworkCard)[1]
+        if not networkCard then
+            error("Network card not found!")
         end
 
         power = Power:new(modules, dependencies)
@@ -73,14 +52,9 @@ return function(dependencies)
         power:initialize()
         monitoring:initialize()
 
-        -- Network setup
-        net = computer.getPCIDevices(classes.NetworkCard)[1]
-        if not net then
-            error("Network card not found!")
-        end
         print("Network card found. Opening port 101...")
-        net:open(101)
-        event.listen(net)
+        networkCard:open(101)
+        event.listen(networkCard)
 
         print("Starting main control loop...")
         while running do

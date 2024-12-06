@@ -187,15 +187,15 @@ function Monitoring:getRefineryStatus(refinery)
 end
 
 function Monitoring:broadcastRefineryStatus()
-    if not self.networkCard then return end -- Skip if no network card
-
     for i, refinery in ipairs(self.refineries) do
         local status = self:getRefineryStatus(refinery)
-        self.networkCard:broadcast(100, "refinery_update", {
-            "refinery_" .. i,
-            status,
-            refinery.productivity
-        })
+        if self.networkCard then -- Use the instance network card
+            self.networkCard:broadcast(100, "refinery_update", {
+                "refinery_" .. i,
+                status,
+                refinery.productivity
+            })
+        end
     end
 end
 
