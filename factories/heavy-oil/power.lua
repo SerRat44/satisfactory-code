@@ -36,27 +36,7 @@ function Power:initialize()
         error("Failed to initialize power switches")
     end
 
-    -- Test switch functionality
-    print("Testing power switch functionality...")
-    print("Initial power switch state:", self.power_switch.isSwitchOn)
-
-    -- Try toggling the switch
-    local currentState = self.power_switch.isSwitchOn
-    print("Attempting to toggle power switch...")
-    pcall(function()
-        self.power_switch:setIsSwitchOn(not currentState)
-        print("New state:", self.power_switch.isSwitchOn)
-        -- Toggle back
-        self.power_switch:setIsSwitchOn(currentState)
-        print("Restored state:", self.power_switch.isSwitchOn)
-    end)
-
-    -- Test event registration
-    print("Testing switch event registration...")
-    print("MAIN switch Hash:", self.display.power.switches.MAIN.Hash)
-    print("BATTERY switch Hash:", self.display.power.switches.BATTERY.Hash)
-
-    -- Setup initial switch states and controls
+    -- Setup power controls
     self:setupPowerControls()
 
     -- Set up initial states for switches based on actual power switch positions
@@ -108,10 +88,16 @@ function Power:setupPowerControls()
         self:updatePowerIndicators()
     end
 
+    -- Dynamically populate powerControls with the latest hashes
+    print("Updating power controls...")
     self.powerControls = {
         [self.display.power.switches.MAIN.Hash] = handleMainPowerSwitch,
         [self.display.power.switches.BATTERY.Hash] = handleBatteryPowerSwitch
     }
+
+    for hash, action in pairs(self.powerControls) do
+        print("Registered power control for Hash:", hash)
+    end
 
     return self.powerControls
 end

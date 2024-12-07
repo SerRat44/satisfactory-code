@@ -100,13 +100,15 @@ return function(dependencies)
                 print("Processing ChangeState event...")
                 if s and s.Hash then
                     print("Switch Hash:", s.Hash)
-                    local powerAction = power.powerControls[s.Hash]
+                    local powerAction = self.powerControls[s.Hash]
                     if powerAction then
                         print("Executing power action for switch...")
                         powerAction()
                         print("Power action completed")
                     else
                         print("WARNING: No power action found for Hash:", s.Hash)
+                        print("Reinitializing power controls...")
+                        self:setupPowerControls()
                     end
                 else
                     print("WARNING: Invalid switch event - no Hash found")
