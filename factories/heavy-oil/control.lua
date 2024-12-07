@@ -51,9 +51,6 @@ return function(dependencies)
 
     -- Main control loop function
     controlModule.main = function()
-        -- Register cleanup handler for errors
-        computer.bindOnError(cleanup)
-
         print("Initializing modules...")
 
         -- Get the display panel first
@@ -106,9 +103,11 @@ return function(dependencies)
                 print("Error during event pull: " .. tostring(e))
                 print("Attempting to reinitialize power module...")
                 pcall(function()
-                    power:cleanup() -- Clean up before reinitializing
-                    power:initialize()
-                    print("Power module reinitialized")
+                    if power then
+                        power:cleanup() -- Clean up before reinitializing
+                        power:initialize()
+                        print("Power module reinitialized")
+                    end
                 end)
                 goto continue
             end
@@ -150,7 +149,7 @@ return function(dependencies)
             end
 
             -- Regular updates with error handling
-            pcall(function()
+            local updateSuccess, updateError = pcall(function()
                 monitoring:updateProductivityHistory()
                 power:updatePowerDisplays()
                 power:updatePowerIndicators()
@@ -161,8 +160,15 @@ return function(dependencies)
                 end
             end)
 
+            if not updateSuccess then
+                print("Error during updates: " .. tostring(updateError))
+            end
+
             ::continue::
         end
+
+        -- Ensure cleanup runs when the loop exits
+        cleanup()
     end
 
     return controlModule
