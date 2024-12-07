@@ -30,7 +30,7 @@ return function(dependencies)
     end
 
     -- Cleanup function to handle proper shutdown
-    controlModule.cleanup = function()
+    local function cleanup()
         print("Cleaning up control module...")
         -- Clear event listeners
         if networkCard then
@@ -51,8 +51,8 @@ return function(dependencies)
 
     -- Main control loop function
     controlModule.main = function()
-        -- Register cleanup handler
-        computer.bindOnError(controlModule.cleanup)
+        -- Register cleanup handler for errors
+        computer.bindOnError(cleanup)
 
         print("Initializing modules...")
 
@@ -164,9 +164,6 @@ return function(dependencies)
             ::continue::
         end
     end
-
-    -- Handle shutdown properly
-    computer.bindOnShutdown(controlModule.cleanup)
 
     return controlModule
 end
