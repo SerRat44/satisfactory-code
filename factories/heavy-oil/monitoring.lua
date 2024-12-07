@@ -60,19 +60,23 @@ function Monitoring:calculateTotalPolymerOutput()
             local cycleTime = refinery.cycleTime or 6
             local potential = refinery.currentPotential or 1
 
-            -- Calculate recipes per minute considering cycle time and overclock
-            local recipesPerMinute = (60 / cycleTime) * potential
+            -- First calculate base recipes per minute without potential
+            local baseRecipesPerMinute = 60 / cycleTime
 
-            -- Debug output
-            print(string.format("Refinery stats - Productivity: %.2f%%, Cycle Time: %.2fs, Potential: %.2f",
-                productivity, cycleTime, potential))
-            print(string.format("Recipes per minute: %.2f", recipesPerMinute))
+            -- Then apply potential (overclock) multiplier
+            local actualRecipesPerMinute = baseRecipesPerMinute * potential
 
-            -- Calculate output for this machine
-            -- Base recipe output * recipes per minute * productivity percentage
-            local machine_output = BASE_RECIPE_OUTPUT * recipesPerMinute * (productivity / 100)
+            -- Calculate final output including productivity
+            local machine_output = BASE_RECIPE_OUTPUT * actualRecipesPerMinute
 
-            print(string.format("Machine output: %.2f/min", machine_output))
+            -- Debug output for each machine
+            print(string.format("Machine stats:"))
+            print(string.format("  Productivity: %.2f%%", productivity))
+            print(string.format("  Cycle Time: %.2fs", cycleTime))
+            print(string.format("  Potential: %.2fx", potential))
+            print(string.format("  Base recipes/min: %.2f", baseRecipesPerMinute))
+            print(string.format("  Actual recipes/min: %.2f", actualRecipesPerMinute))
+            print(string.format("  Output: %.2f/min", machine_output))
 
             total_output = total_output + machine_output
         end
