@@ -57,15 +57,15 @@ function Monitoring:calculateTotalPolymerOutput()
     for _, refinery in ipairs(self.refineries) do
         if refinery and not refinery.standby then
             local productivity = refinery.productivity
-            local potential = refinery.currentPotential
+            local production_boost = refinery.currentProductionBoost
 
             -- Calculate output using direct per-minute value
-            local machine_output = POLYMER_PER_MINUTE * productivity * potential
+            local machine_output = POLYMER_PER_MINUTE * productivity * production_boost
 
             -- Debug output for each machine
             print(string.format("Machine stats:"))
             print(string.format("  Productivity: %.2f", productivity))
-            print(string.format("  Potential: %.2fx", potential))
+            print(string.format("  Production Boost: %.2fx", production_boost))
             print(string.format("  Output: %.2f/min", machine_output))
 
             total_output = total_output + machine_output
