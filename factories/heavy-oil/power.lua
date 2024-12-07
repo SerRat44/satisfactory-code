@@ -36,12 +36,34 @@ function Power:initialize()
         error("Failed to initialize power switches")
     end
 
+    -- Test switch functionality
+    print("Testing power switch functionality...")
+    print("Initial power switch state:", self.power_switch.isSwitchOn)
+
+    -- Try toggling the switch
+    local currentState = self.power_switch.isSwitchOn
+    print("Attempting to toggle power switch...")
+    pcall(function()
+        self.power_switch:setIsSwitchOn(not currentState)
+        print("New state:", self.power_switch.isSwitchOn)
+        -- Toggle back
+        self.power_switch:setIsSwitchOn(currentState)
+        print("Restored state:", self.power_switch.isSwitchOn)
+    end)
+
+    -- Test event registration
+    print("Testing switch event registration...")
+    print("MAIN switch Hash:", self.display.power.switches.MAIN.Hash)
+    print("BATTERY switch Hash:", self.display.power.switches.BATTERY.Hash)
+
     -- Setup initial switch states and controls
     self:setupPowerControls()
 
     -- Set up initial states for switches based on actual power switch positions
     self.display.power.switches.MAIN.state = self.power_switch.isSwitchOn
     self.display.power.switches.BATTERY.state = self.battery_switch.isSwitchOn
+    print("Set initial MAIN switch state to:", self.display.power.switches.MAIN.state)
+    print("Set initial BATTERY switch state to:", self.display.power.switches.BATTERY.state)
 
     -- Register event listeners for switches
     event.listen(self.display.power.switches.MAIN)
@@ -51,13 +73,17 @@ end
 function Power:setupPowerControls()
     local function handleMainPowerSwitch()
         local state = self.display.power.switches.MAIN.state
+        print("Main power switch triggered, new state:", state)
         self.power_switch:setIsSwitchOn(state)
+        print("Physical switch state after set:", self.power_switch.isSwitchOn)
         self:updatePowerIndicators()
     end
 
     local function handleBatteryPowerSwitch()
         local state = self.display.power.switches.BATTERY.state
+        print("Battery switch triggered, new state:", state)
         self.battery_switch:setIsSwitchOn(state)
+        print("Physical switch state after set:", self.battery_switch.isSwitchOn)
         self:updatePowerIndicators()
     end
 
