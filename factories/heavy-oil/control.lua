@@ -83,11 +83,6 @@ return function(dependencies)
 
             if not success then
                 print("Error during event pull: " .. tostring(e))
-                -- Try to reinitialize power module on error
-                if power then
-                    print("Attempting to reinitialize power module...")
-                    pcall(function() power:initialize() end)
-                end
             else
                 if e == "ChangeState" then
                     local powerAction = power.powerControls[s.Hash]
