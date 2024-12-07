@@ -25,7 +25,29 @@ function Power:new(display, dependencies)
     return instance
 end
 
+function Power:cleanup()
+    -- Remove all event listeners
+    if self.display and self.display.power and self.display.power.switches then
+        if self.display.power.switches.MAIN then
+            event.clear(self.display.power.switches.MAIN)
+        end
+        if self.display.power.switches.BATTERY then
+            event.clear(self.display.power.switches.BATTERY)
+        end
+    end
+
+    if self.power_switch then
+        event.clear(self.power_switch)
+    end
+    if self.battery_switch then
+        event.clear(self.battery_switch)
+    end
+end
+
 function Power:initialize()
+    -- Cleanup any existing event listeners first
+    self:cleanup()
+
     -- Initialize switches
     self.power_switch = component.proxy(self.config.COMPONENT_IDS.POWER_SWITCH)
     self.battery_switch = component.proxy(self.config.COMPONENT_IDS.BATTERY_SWITCH)
@@ -36,16 +58,25 @@ function Power:initialize()
     end
 
     -- Set initial states for switches
-    self.display.power.switches.MAIN.state = self.power_switch.isSwitchOn
-    self.display.power.switches.BATTERY.state = self.battery_switch.isSwitchOn
+    if self.display and self.display.power and self.display.power.switches then
+        if self.display.power.switches.MAIN then
+            self.display.power.switches.MAIN.state = self.power_switch.isSwitchOn
+        end
+        if self.display.power.switches.BATTERY then
+            self.display.power.switches.BATTERY.state = self.battery_switch.isSwitchOn
+        end
+    end
 
     print("Initializing power controls...")
-    event.clear()
 
     -- Register event listeners with proper error handling
     local success = pcall(function()
-        event.listen(self.display.power.switches.MAIN)
-        event.listen(self.display.power.switches.BATTERY)
+        if self.display.power.switches.MAIN then
+            event.listen(self.display.power.switches.MAIN)
+        end
+        if self.display.power.switches.BATTERY then
+            event.listen(self.display.power.switches.BATTERY)
+        end
         event.listen(self.power_switch)
         event.listen(self.battery_switch)
     end)
@@ -53,8 +84,14 @@ function Power:initialize()
     if not success then
         print("Warning: Failed to register switch event listeners. Retrying...")
         computer.millis(100)
-        event.listen(self.display.power.switches.MAIN)
-        event.listen(self.display.power.switches.BATTERY)
+        self:cleanup() -- Clear any partial registrations
+        -- Try again
+        if self.display.power.switches.MAIN then
+            event.listen(self.display.power.switches.MAIN)
+        end
+        if self.display.power.switches.BATTERY then
+            event.listen(self.display.power.switches.BATTERY)
+        end
         event.listen(self.power_switch)
         event.listen(self.battery_switch)
     end

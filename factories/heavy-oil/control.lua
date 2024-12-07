@@ -29,8 +29,31 @@ return function(dependencies)
         end
     end
 
+    -- Cleanup function to handle proper shutdown
+    controlModule.cleanup = function()
+        print("Cleaning up control module...")
+        -- Clear event listeners
+        if networkCard then
+            event.clear(networkCard)
+        end
+        -- Clean up power module
+        if power then
+            power:cleanup()
+        end
+        -- Clean up monitoring module
+        if monitoring then
+            monitoring:cleanup()
+        end
+        -- Clear all remaining events
+        event.clear()
+        running = false
+    end
+
     -- Main control loop function
     controlModule.main = function()
+        -- Register cleanup handler
+        computer.bindOnError(controlModule.cleanup)
+
         print("Initializing modules...")
 
         -- Get the display panel first
@@ -58,20 +81,20 @@ return function(dependencies)
             error("Network card not found!")
         end
 
+        -- Create power and monitoring instances
         power = Power:new(modules, dependencies)
         monitoring = Monitoring:new(modules, dependencies)
 
         print("Initializing components...")
+        -- Clear any existing event listeners before initializing
+        event.clear()
+
         power:initialize()
         monitoring:initialize()
 
         print("Network card found. Opening port 101...")
         networkCard:open(101)
         event.listen(networkCard)
-
-        -- Listen for power fuse events on both switches
-        event.listen(power.power_switch)
-        event.listen(power.battery_switch)
 
         print("Starting main control loop...")
         while running do
@@ -83,18 +106,18 @@ return function(dependencies)
                 print("Error during event pull: " .. tostring(e))
                 print("Attempting to reinitialize power module...")
                 pcall(function()
+                    power:cleanup() -- Clean up before reinitializing
                     power:initialize()
                     print("Power module reinitialized")
                 end)
                 goto continue
             end
 
+            -- Process events
             if e == "ChangeState" then
                 print("Processing ChangeState event...")
-                print("Source:", s)
-
-                -- Try to handle the switch event
                 if s then
+                    print("Source:", s)
                     local handled = power:handleSwitchEvent(s)
                     if not handled then
                         print("WARNING: Unhandled switch event")
@@ -126,19 +149,24 @@ return function(dependencies)
                 handleNetworkMessage(type, data)
             end
 
-            -- Regular updates
-            monitoring:updateProductivityHistory()
-            power:updatePowerDisplays()
-            power:updatePowerIndicators()
+            -- Regular updates with error handling
+            pcall(function()
+                monitoring:updateProductivityHistory()
+                power:updatePowerDisplays()
+                power:updatePowerIndicators()
 
-            if dataCollectionActive then
-                monitoring:broadcastRefineryStatus()
-                power:broadcastPowerStatus()
-            end
+                if dataCollectionActive then
+                    monitoring:broadcastRefineryStatus()
+                    power:broadcastPowerStatus()
+                end
+            end)
 
             ::continue::
         end
     end
+
+    -- Handle shutdown properly
+    computer.bindOnShutdown(controlModule.cleanup)
 
     return controlModule
 end
