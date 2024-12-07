@@ -36,18 +36,22 @@ function Power:initialize()
         error("Failed to initialize power switches")
     end
 
-    -- Setup power controls
-    self:setupPowerControls()
+    -- Log switch states for debugging
+    print("Power switch initial state:", self.power_switch.isSwitchOn)
+    print("Battery switch initial state:", self.battery_switch.isSwitchOn)
 
-    -- Set up initial states for switches based on actual power switch positions
+    -- Set initial states for switches
     self.display.power.switches.MAIN.state = self.power_switch.isSwitchOn
     self.display.power.switches.BATTERY.state = self.battery_switch.isSwitchOn
-    print("Set initial MAIN switch state to:", self.display.power.switches.MAIN.state)
-    print("Set initial BATTERY switch state to:", self.display.power.switches.BATTERY.state)
 
-    -- Register event listeners for switches
+    print("Initializing power controls...")
+    self:setupPowerControls()
+
+    -- Register event listeners
     event.listen(self.display.power.switches.MAIN)
     event.listen(self.display.power.switches.BATTERY)
+
+    print("Power initialization complete.")
 end
 
 function Power:handleFuseEvent(circuit)
@@ -76,7 +80,6 @@ function Power:setupPowerControls()
         local state = self.display.power.switches.MAIN.state
         print("Main power switch triggered, new state:", state)
         self.power_switch:setIsSwitchOn(state)
-        print("Physical switch state after set:", self.power_switch.isSwitchOn)
         self:updatePowerIndicators()
     end
 
@@ -84,22 +87,19 @@ function Power:setupPowerControls()
         local state = self.display.power.switches.BATTERY.state
         print("Battery switch triggered, new state:", state)
         self.battery_switch:setIsSwitchOn(state)
-        print("Physical switch state after set:", self.battery_switch.isSwitchOn)
         self:updatePowerIndicators()
     end
 
-    -- Dynamically populate powerControls with the latest hashes
-    print("Updating power controls...")
+    -- Map switch hashes to their corresponding actions
     self.powerControls = {
         [self.display.power.switches.MAIN.Hash] = handleMainPowerSwitch,
         [self.display.power.switches.BATTERY.Hash] = handleBatteryPowerSwitch
     }
 
-    for hash, action in pairs(self.powerControls) do
+    -- Log control mappings for debugging
+    for hash, _ in pairs(self.powerControls) do
         print("Registered power control for Hash:", hash)
     end
-
-    return self.powerControls
 end
 
 function Power:updatePowerIndicators()
