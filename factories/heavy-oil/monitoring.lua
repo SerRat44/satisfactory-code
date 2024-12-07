@@ -112,8 +112,8 @@ function Monitoring:updateProductivityHistory()
         -- Update gauge if it exists
         if self.display.factory.gauges[i] then
             if refinery and not refinery.standby then
-                local prod = tonumber(refinery.productivity) or 0
-                prod = math.min(prod, 100)
+                local prod = refinery.productivity or 0
+                self.display.factory.gauges[i].limit = 1
                 self.display.factory.gauges[i].percent = prod
                 self:updateGaugeColor(self.display.factory.gauges[i], prod)
             else
@@ -219,10 +219,10 @@ function Monitoring:updateGaugeColor(gauge, percent)
 
     if percent >= 0.95 then
         self.utils.setComponentColor(gauge, self.colors.STATUS.WORKING, self.colors.EMIT.GAUGE)
-    elseif percent >= 0.75 then
-        self.utils.setComponentColor(gauge, self.colors.STATUS.WARNING, self.colors.EMIT.GAUGE)
-    else
+    elseif percent >= 0.5 then
         self.utils.setComponentColor(gauge, self.colors.STATUS.IDLE, self.colors.EMIT.GAUGE)
+    else
+        self.utils.setComponentColor(gauge, self.colors.STATUS.WARNING, self.colors.EMIT.GAUGE)
     end
 end
 
