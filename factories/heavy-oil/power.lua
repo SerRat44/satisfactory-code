@@ -5,10 +5,7 @@ local Power = {
     battery_switch = nil,
     light_switch = nil,
     display = nil,
-    powerControls = {},
-    networkCard = nil,
-    mainSwitchModule = nil,   -- Store reference to the main switch module
-    batterySwitchModule = nil -- Store reference to the battery switch module
+    networkCard = nil
 }
 
 function Power:new(display, dependencies)
@@ -38,34 +35,27 @@ function Power:initialize()
         error("Failed to initialize power switches")
     end
 
-    -- Store references to switch modules
-    self.mainSwitchModule = self.display.power.switches.MAIN
-    self.batterySwitchModule = self.display.power.switches.BATTERY
-
     -- Set initial states for switches
-    if self.mainSwitchModule then
-        self.mainSwitchModule.state = self.power_switch.isSwitchOn
-    end
-    if self.batterySwitchModule then
-        self.batterySwitchModule.state = self.battery_switch.isSwitchOn
-    end
+    self.display.power.switches.MAIN.state = self.power_switch.isSwitchOn
+    self.display.power.switches.BATTERY.state = self.battery_switch.isSwitchOn
 
     print("Initializing power controls...")
-    event.clear() -- Clear existing events
-    self:setupPowerControls()
+    event.clear()
 
-    -- Register event listeners
-    if self.mainSwitchModule then
-        event.listen(self.mainSwitchModule)
-        print("Registered main switch listener")
-    end
-    if self.batterySwitchModule then
-        event.listen(self.batterySwitchModule)
-        print("Registered battery switch listener")
+    -- Register event listeners with proper error handling
+    local success = pcall(function()
+        event.listen(self.display.power.switches.MAIN)
+        event.listen(self.display.power.switches.BATTERY)
+    end)
+
+    if not success then
+        print("Warning: Failed to register switch event listeners. Retrying...")
+        computer.millis(100)
+        event.listen(self.display.power.switches.MAIN)
+        event.listen(self.display.power.switches.BATTERY)
     end
 
     print("Power initialization complete.")
-    self:debugPowerControls()
 end
 
 function Power:handleFuseEvent(circuit)
@@ -89,19 +79,24 @@ function Power:handleFuseEvent(circuit)
     end
 end
 
-function Power:handleSwitchEvent(switchModule)
-    -- Check if it's the main power switch
-    if switchModule == self.mainSwitchModule then
-        print("Main power switch triggered")
-        self.power_switch:setIsSwitchOn(switchModule.state)
+function Power:handleSwitchEvent(source)
+    print("Handling switch event from source:", source)
+
+    -- Check if it's a switch module
+    if not source then return false end
+
+    -- Handle Main Power Switch
+    if source == self.display.power.switches.MAIN then
+        print("Main power switch triggered, state:", source.state)
+        self.power_switch:setIsSwitchOn(source.state)
         self:updatePowerIndicators()
         return true
     end
 
-    -- Check if it's the battery switch
-    if switchModule == self.batterySwitchModule then
-        print("Battery switch triggered")
-        self.battery_switch:setIsSwitchOn(switchModule.state)
+    -- Handle Battery Switch
+    if source == self.display.power.switches.BATTERY then
+        print("Battery switch triggered, state:", source.state)
+        self.battery_switch:setIsSwitchOn(source.state)
         self:updatePowerIndicators()
         return true
     end

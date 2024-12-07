@@ -70,6 +70,7 @@ return function(dependencies)
         event.listen(networkCard)
 
         print("Starting main control loop...")
+        print("Starting main control loop...")
         while running do
             local success, e, s, sender, port, type, data = pcall(function()
                 return event.pull(config.UPDATE_INTERVAL)
@@ -85,35 +86,18 @@ return function(dependencies)
                 goto continue
             end
 
-            -- Debug output for events
-            if e then
-                print("Event received:", e)
-                if s then
-                    print("Source:", s)
-                    if s.Hash then
-                        print("Source Hash:", s.Hash)
-                    end
-                end
-            end
-
             if e == "ChangeState" then
                 print("Processing ChangeState event...")
-                if s and s.Hash then
-                    print("Switch Hash:", s.Hash)
-                    local powerAction = power.powerControls[s.Hash] -- Use 'power' instead of 'self'
-                    if powerAction then
-                        print("Executing power action for switch...")
-                        powerAction()
-                        print("Power action completed")
-                    else
-                        print("WARNING: No power action found for Hash:", s.Hash)
-                        -- Log available hashes for debugging
-                        for registeredHash in pairs(power.powerControls) do
-                            print("Registered Hash:", registeredHash)
-                        end
+                print("Source:", s)
+
+                -- Try to handle the switch event
+                if s then
+                    local handled = power:handleSwitchEvent(s)
+                    if not handled then
+                        print("WARNING: Unhandled switch event")
                     end
                 else
-                    print("WARNING: Invalid switch event - no Hash found")
+                    print("WARNING: Invalid switch event - no source")
                 end
             elseif e == "Trigger" then
                 print("Processing Trigger event...")
