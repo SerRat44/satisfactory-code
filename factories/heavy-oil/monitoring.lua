@@ -56,8 +56,8 @@ function Monitoring:calculateTotalPolymerOutput()
 
     for _, refinery in ipairs(self.refineries) do
         if refinery and not refinery.standby then
-            local productivity = refinery.productivity or 0 -- Already 0-1 scale
-            local potential = refinery.currentPotential or 1
+            local productivity = refinery.productivity
+            local potential = refinery.currentPotential
 
             -- Calculate output using direct per-minute value
             local machine_output = POLYMER_PER_MINUTE * productivity * potential
@@ -112,7 +112,7 @@ function Monitoring:updateProductivityHistory()
         -- Update gauge if it exists
         if self.display.factory.gauges[i] then
             if refinery and not refinery.standby then
-                local prod = refinery.productivity or 0
+                local prod = refinery.productivity
                 self.display.factory.gauges[i].limit = 1
                 self.display.factory.gauges[i].percent = prod
                 self:updateGaugeColor(self.display.factory.gauges[i], prod)
@@ -198,7 +198,7 @@ function Monitoring:updateButtonColor(index)
         end
 
         -- Get productivity value
-        local productivity = refinery.productivity or 0
+        local productivity = refinery.productivity
 
         -- Set color based on productivity thresholds
         if productivity >= 0.95 then
