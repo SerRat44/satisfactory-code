@@ -51,31 +51,21 @@ function Monitoring:cleanup()
 end
 
 function Monitoring:calculateTotalPolymerOutput()
-    local BASE_RECIPE_OUTPUT = 60 -- Base recipe output per cycle
+    local POLYMER_PER_MINUTE = 750 -- Base output per minute
     local total_output = 0
 
     for _, refinery in ipairs(self.refineries) do
         if refinery and not refinery.standby then
-            local productivity = tonumber(refinery.productivity) or 0
-            local cycleTime = refinery.cycleTime or 6
+            local productivity = tonumber(refinery.productivity) or 0 -- Already 0-1 scale
             local potential = refinery.currentPotential or 1
 
-            -- First calculate base recipes per minute without potential
-            local baseRecipesPerMinute = 60 / cycleTime
-
-            -- Then apply potential (overclock) multiplier
-            local actualRecipesPerMinute = baseRecipesPerMinute * potential
-
-            -- Calculate final output including productivity
-            local machine_output = BASE_RECIPE_OUTPUT * actualRecipesPerMinute
+            -- Calculate output using direct per-minute value
+            local machine_output = POLYMER_PER_MINUTE * productivity
 
             -- Debug output for each machine
             print(string.format("Machine stats:"))
-            print(string.format("  Productivity: %.2f%%", productivity))
-            print(string.format("  Cycle Time: %.2fs", cycleTime))
+            print(string.format("  Productivity: %.2f", productivity))
             print(string.format("  Potential: %.2fx", potential))
-            print(string.format("  Base recipes/min: %.2f", baseRecipesPerMinute))
-            print(string.format("  Actual recipes/min: %.2f", actualRecipesPerMinute))
             print(string.format("  Output: %.2f/min", machine_output))
 
             total_output = total_output + machine_output
