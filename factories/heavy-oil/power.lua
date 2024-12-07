@@ -46,6 +46,8 @@ function Power:initialize()
     local success = pcall(function()
         event.listen(self.display.power.switches.MAIN)
         event.listen(self.display.power.switches.BATTERY)
+        event.listen(self.power_switch)
+        event.listen(self.battery_switch)
     end)
 
     if not success then
@@ -53,28 +55,36 @@ function Power:initialize()
         computer.millis(100)
         event.listen(self.display.power.switches.MAIN)
         event.listen(self.display.power.switches.BATTERY)
+        event.listen(self.power_switch)
+        event.listen(self.battery_switch)
     end
 
     print("Power initialization complete.")
 end
 
-function Power:handleFuseEvent(circuit)
-    -- Identify which circuit triggered and update indicators
-    local main_circuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
-    local factory_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
-    local battery_circuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
+function Power:handlePowerFuseEvent(source)
+    print("Handling power fuse event from source:", source)
 
-    if circuit == main_circuit then
+    if source == self.power_switch then
+        -- Update main power indicators
+        local main_circuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
+        local factory_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
+
+        -- Update main grid indicator
         self.utils.setComponentColor(self.display.power.indicators.MAIN,
-            circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
+            main_circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
             self.colors.EMIT.INDICATOR)
-    elseif circuit == factory_circuit then
+
+        -- Update factory indicator
         self.utils.setComponentColor(self.display.power.indicators.FACTORY,
-            circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
+            factory_circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
             self.colors.EMIT.INDICATOR)
-    elseif circuit == battery_circuit then
+    elseif source == self.battery_switch then
+        -- Update battery indicators
+        local battery_circuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
+
         self.utils.setComponentColor(self.display.power.indicators.BATTERY,
-            circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
+            battery_circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
             self.colors.EMIT.INDICATOR)
     end
 end

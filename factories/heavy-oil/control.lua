@@ -3,7 +3,7 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local DisplayConstructor = dependencies.display -- This is the constructor function
+    local DisplayConstructor = dependencies.display
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
 
@@ -69,7 +69,10 @@ return function(dependencies)
         networkCard:open(101)
         event.listen(networkCard)
 
-        print("Starting main control loop...")
+        -- Listen for power fuse events on both switches
+        event.listen(power.power_switch)
+        event.listen(power.battery_switch)
+
         print("Starting main control loop...")
         while running do
             local success, e, s, sender, port, type, data = pcall(function()
@@ -98,6 +101,11 @@ return function(dependencies)
                     end
                 else
                     print("WARNING: Invalid switch event - no source")
+                end
+            elseif e == "PowerFuseChanged" then
+                print("Processing PowerFuseChanged event...")
+                if s then
+                    power:handlePowerFuseEvent(s)
                 end
             elseif e == "Trigger" then
                 print("Processing Trigger event...")
