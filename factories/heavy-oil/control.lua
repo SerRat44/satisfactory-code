@@ -3,10 +3,9 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local DisplayConstructor = dependencies.display
+    local DisplayConstructor = dependencies.display -- This is the constructor function
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
-    local PowerDisplay = dependencies.power_display
 
     -- Create the Display class
     local Display = DisplayConstructor({ colors = colors, config = config })
@@ -17,7 +16,7 @@ return function(dependencies)
     -- Local variables for module state
     local dataCollectionActive = true
     local running = true
-    local display, power, monitoring, power_display, modules, networkCard
+    local display, power, monitoring, modules, networkCard
 
     -- Create the control module table
     local controlModule = {}
@@ -59,22 +58,12 @@ return function(dependencies)
             error("Network card not found!")
         end
 
-        print("Initializing power module...")
         power = Power:new(modules, dependencies)
-        power:initialize() -- Initialize power here
-
-        print("Creating power display instance...")
-        if not power.power_switch then
-            error("Power switch is not initialized in Power module")
-        end
-        power_display = PowerDisplay:new(power.power_switch, dependencies)
-
-        print("Initializing monitoring module...")
         monitoring = Monitoring:new(modules, dependencies)
-        monitoring:initialize()
 
-        print("Initializing power display module...")
-        power_display:initialize()
+        print("Initializing components...")
+        power:initialize()
+        monitoring:initialize()
 
         print("Network card found. Opening port 101...")
         networkCard:open(101)
@@ -88,6 +77,11 @@ return function(dependencies)
 
             if not success then
                 print("Error during event pull: " .. tostring(e))
+                -- Try to reinitialize power module
+                if power then
+                    print("Attempting to reinitialize power module...")
+                    pcall(function() power:initialize() end)
+                end
             else
                 if e == "ChangeState" then
                     local powerAction = power.powerControls[s.Hash]
@@ -115,7 +109,6 @@ return function(dependencies)
                 monitoring:updateProductivityHistory()
                 power:updatePowerDisplays()
                 power:updatePowerIndicators()
-                power_display:update() -- Update power display
 
                 if dataCollectionActive then
                     monitoring:broadcastRefineryStatus()
