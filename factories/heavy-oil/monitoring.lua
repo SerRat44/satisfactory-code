@@ -51,7 +51,7 @@ function Monitoring:cleanup()
 end
 
 function Monitoring:calculateTotalPolymerOutput()
-    local POLYMER_PER_MINUTE = 750 -- Base output per minute
+    local POLYMER_PER_MINUTE = 20
     local total_output = 0
 
     for _, refinery in ipairs(self.refineries) do
@@ -165,10 +165,10 @@ function Monitoring:updateProductivityIndicator()
         self.utils.setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.OFF,
             self.colors.EMIT.INDICATOR)
     else
-        if self.current_productivity >= 95 then
+        if self.current_productivity >= 0.95 then
             self.utils.setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.WORKING,
                 self.colors.EMIT.INDICATOR)
-        elseif self.current_productivity >= 50 then
+        elseif self.current_productivity >= 0.5 then
             self.utils.setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.WARNING,
                 self.colors.EMIT.INDICATOR)
         else
@@ -201,10 +201,10 @@ function Monitoring:updateButtonColor(index)
         local productivity = tonumber(refinery.productivity) or 0
 
         -- Set color based on productivity thresholds
-        if productivity >= 95 then
+        if productivity >= 0.95 then
             self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.WORKING,
                 self.colors.EMIT.BUTTON)
-        elseif productivity >= 75 then
+        elseif productivity >= 0.5 then
             self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.WARNING,
                 self.colors.EMIT.BUTTON)
         else
@@ -217,9 +217,9 @@ end
 function Monitoring:updateGaugeColor(gauge, percent)
     if not gauge then return end
 
-    if percent >= 95 then
+    if percent >= 0.95 then
         self.utils.setComponentColor(gauge, self.colors.STATUS.WORKING, self.colors.EMIT.GAUGE)
-    elseif percent >= 75 then
+    elseif percent >= 0.75 then
         self.utils.setComponentColor(gauge, self.colors.STATUS.WARNING, self.colors.EMIT.GAUGE)
     else
         self.utils.setComponentColor(gauge, self.colors.STATUS.IDLE, self.colors.EMIT.GAUGE)
@@ -238,12 +238,12 @@ function Monitoring:getRefineryStatus(refinery)
 
     local productivity = tonumber(refinery.productivity) or 0
 
-    if productivity < 75 then
-        return "WARNING"
-    elseif productivity < 95 then
-        return "IDLE"
-    elseif productivity >= 95 then
+    if productivity >= 0.95 then
         return "WORKING"
+    elseif productivity >= 0.50 then
+        return "IDLE"
+    elseif productivity >= 0 then
+        return "WARNING"
     else
         return "OFF"
     end
