@@ -1,4 +1,23 @@
--- Now let's fix the loader.lua (the main script)
+local GITHUB_URL = "https://raw.githubusercontent.com/SerRat44/satisfactory-code/main"
+local FACTORY_NAME = "heavy-oil"
+local internet = computer.getPCIDevices(classes.Build_InternetCard_C)[1]
+
+function downloadFromGithub(path)
+    local url = GITHUB_URL .. "/" .. path
+    print("Trying to download: " .. url)
+
+    local request = internet:request(url, "GET", "")
+    print("Request sent, awaiting response...")
+
+    local result, data, headers = request:await()
+
+    if result == 200 then
+        print("Downloaded successfully: " .. path)
+        return data
+    else
+        error("Download failed for " .. path .. ": " .. (result or "unknown error"))
+    end
+end
 
 function loadFiles()
     print("Starting file downloads...")
@@ -31,13 +50,16 @@ function loadFiles()
     local config = configFn()
     print("Config loaded successfully")
 
+    print(config.COMPONENT_IDS.DISPLAY_PANEL)
+
     -- Load and compile modules with dependencies
     print("Loading display.lua...")
     local displayData = downloadFromGithub(base_path .. "display.lua")
     print("Compiling display.lua...")
     local displayFn, err = load(displayData)
     if not displayFn then error("Failed to compile display.lua: " .. err) end
-    local display = displayFn({ colors = colors, config = config })
+    local Display = displayFn({ colors = colors, config = config }) -- Execute with dependencies
+    if not Display then error("Failed to create Display class") end
     print("Display loaded successfully")
 
     print("Loading power.lua...")
@@ -62,18 +84,29 @@ function loadFiles()
     local controlFn, err = load(controlData)
     if not controlFn then error("Failed to compile control.lua: " .. err) end
 
-    -- Initialize control with all dependencies
-    local controlModule = controlFn({
+    -- Create and execute the control module factory function
+    print("Creating control module...")
+    local controlModuleFactory = controlFn()
+    if type(controlModuleFactory) ~= "function" then
+        error("Control module must return a factory function, got " .. type(controlModuleFactory))
+    end
+
+    -- Execute the factory function with dependencies to get the actual module
+    local controlModule = controlModuleFactory({
         colors = colors,
         utils = utils,
         config = config,
-        display = display,
+        display = Display, -- Pass the actual Display class
         power = power,
         monitoring = monitoring
     })
 
-    if type(controlModule) ~= "table" or type(controlModule.main) ~= "function" then
-        error("Control module is not properly formatted - expected table with main function")
+    -- Verify the control module has the required structure
+    if type(controlModule) ~= "table" then
+        error("Control module must return a table, got " .. type(controlModule))
+    end
+    if type(controlModule.main) ~= "function" then
+        error("Control module must have a 'main' function")
     end
 
     -- Start the main control loop
