@@ -100,7 +100,7 @@ return function(dependencies)
                 print("Processing ChangeState event...")
                 if s and s.Hash then
                     print("Switch Hash:", s.Hash)
-                    local powerAction = self.powerControls[s.Hash]
+                    local powerAction = power.powerControls[s.Hash] -- Use 'power' instead of 'self'
                     if powerAction then
                         print("Executing power action for switch...")
                         powerAction()
@@ -108,7 +108,7 @@ return function(dependencies)
                     else
                         print("WARNING: No power action found for Hash:", s.Hash)
                         -- Log available hashes for debugging
-                        for registeredHash in pairs(self.powerControls) do
+                        for registeredHash in pairs(power.powerControls) do
                             print("Registered Hash:", registeredHash)
                         end
                     end
