@@ -205,10 +205,10 @@ function Monitoring:updateButtonColor(index)
             self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.WORKING,
                 self.colors.EMIT.BUTTON)
         elseif productivity >= 0.5 then
-            self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.WARNING,
-                self.colors.EMIT.BUTTON)
-        else
             self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.IDLE,
+                self.colors.EMIT.BUTTON)
+        elseif productivity >= 0 then
+            self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.WARNING,
                 self.colors.EMIT.BUTTON)
         end
     end
