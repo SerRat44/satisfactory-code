@@ -6,7 +6,7 @@ return function(dependencies)
     local DisplayConstructor = dependencies.display
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
-    local PowerDisplay = dependencies.power_display -- Add power display module
+    local PowerDisplay = dependencies.power_display
 
     -- Create the Display class
     local Display = DisplayConstructor({ colors = colors, config = config })
@@ -59,16 +59,21 @@ return function(dependencies)
             error("Network card not found!")
         end
 
+        print("Initializing power module...")
         power = Power:new(modules, dependencies)
-        monitoring = Monitoring:new(modules, dependencies)
+        power:initialize() -- Initialize power here
 
-        -- Initialize power display
         print("Creating power display instance...")
+        if not power.power_switch then
+            error("Power switch is not initialized in Power module")
+        end
         power_display = PowerDisplay:new(power.power_switch, dependencies)
 
-        print("Initializing components...")
-        power:initialize()
+        print("Initializing monitoring module...")
+        monitoring = Monitoring:new(modules, dependencies)
         monitoring:initialize()
+
+        print("Initializing power display module...")
         power_display:initialize()
 
         print("Network card found. Opening port 101...")
