@@ -3,9 +3,10 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local DisplayConstructor = dependencies.display -- This is the constructor function
+    local DisplayConstructor = dependencies.display
     local Power = dependencies.power
     local Monitoring = dependencies.monitoring
+    local PowerDisplay = dependencies.power_display -- Add power display module
 
     -- Create the Display class
     local Display = DisplayConstructor({ colors = colors, config = config })
@@ -16,7 +17,7 @@ return function(dependencies)
     -- Local variables for module state
     local dataCollectionActive = true
     local running = true
-    local display, power, monitoring, modules, networkCard
+    local display, power, monitoring, power_display, modules, networkCard
 
     -- Create the control module table
     local controlModule = {}
@@ -61,9 +62,14 @@ return function(dependencies)
         power = Power:new(modules, dependencies)
         monitoring = Monitoring:new(modules, dependencies)
 
+        -- Initialize power display
+        print("Creating power display instance...")
+        power_display = PowerDisplay:new(power.power_switch, dependencies)
+
         print("Initializing components...")
         power:initialize()
         monitoring:initialize()
+        power_display:initialize()
 
         print("Network card found. Opening port 101...")
         networkCard:open(101)
@@ -77,7 +83,7 @@ return function(dependencies)
 
             if not success then
                 print("Error during event pull: " .. tostring(e))
-                -- Try to reinitialize power module
+                -- Try to reinitialize power module on error
                 if power then
                     print("Attempting to reinitialize power module...")
                     pcall(function() power:initialize() end)
@@ -109,6 +115,7 @@ return function(dependencies)
                 monitoring:updateProductivityHistory()
                 power:updatePowerDisplays()
                 power:updatePowerIndicators()
+                power_display:update() -- Update power display
 
                 if dataCollectionActive then
                     monitoring:broadcastRefineryStatus()
