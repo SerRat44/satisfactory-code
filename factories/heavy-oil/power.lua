@@ -151,46 +151,6 @@ function Power:handleSwitchEvent(source)
     return false
 end
 
-function Power:debugPowerControls()
-    print("=== Power Controls Debug ===")
-    print("Main Switch Module:", self.mainSwitchModule)
-    if self.mainSwitchModule then
-        print("Main Switch Hash:", self.mainSwitchModule.Hash)
-        print("Main Switch State:", self.mainSwitchModule.state)
-    end
-
-    print("Battery Switch Module:", self.batterySwitchModule)
-    if self.batterySwitchModule then
-        print("Battery Switch Hash:", self.batterySwitchModule.Hash)
-        print("Battery Switch State:", self.batterySwitchModule.state)
-    end
-
-    print("Registered Controls:")
-    for module, _ in pairs(self.powerControls) do
-        print("Control Module:", module)
-        if module.Hash then
-            print("Control Hash:", module.Hash)
-        end
-    end
-    print("========================")
-end
-
-function Power:setupPowerControls()
-    -- Clear existing controls
-    self.powerControls = {}
-
-    -- Store the module references themselves as keys
-    if self.mainSwitchModule then
-        self.powerControls[self.mainSwitchModule] = true
-        print("Registered main switch control")
-    end
-
-    if self.batterySwitchModule then
-        self.powerControls[self.batterySwitchModule] = true
-        print("Registered battery switch control")
-    end
-end
-
 function Power:updatePowerIndicators()
     local main_power_on = self.power_switch.isSwitchOn
     local main_circuit = self.power_switch:getPowerConnectors()[2]:getCircuit()

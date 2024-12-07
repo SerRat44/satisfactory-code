@@ -137,10 +137,17 @@ return function(dependencies)
         self.modules.flow.gauges.heavy[2] = self.panel:getModule(7, 5, 1)
         self.modules.flow.gauges.heavy[3] = self.panel:getModule(7, 2, 1)
 
+        -- Initialize flow displays
+        self.modules.flow.displays.crude[1] = self.panel:getModule(2, 6, 1)
+        self.modules.flow.displays.crude[2] = self.panel:getModule(2, 3, 1)
+        self.modules.flow.displays.heavy[1] = self.panel:getModule(9, 9, 1)
+        self.modules.flow.displays.heavy[2] = self.panel:getModule(9, 6, 1)
+        self.modules.flow.displays.heavy[3] = self.panel:getModule(9, 3, 1)
+
         -- total in/out displays
         self.modules.flow.displays.total_crude_in = self.panel:getModule(1, 0, 1)
         self.modules.flow.displays.total_heavy_out = self.panel:getModule(8, 0, 1)
-        self.modules.flow.displays.polymer = self.panel:getModule(5, 0, 1)
+        self.modules.flow.displays.total_polymer = self.panel:getModule(5, 0, 1)
 
         -- Initialize flow knobs
         self.modules.flow.knobs.crude[1] = self.panel:getModule(2, 3, 1)
@@ -148,13 +155,6 @@ return function(dependencies)
         self.modules.flow.knobs.heavy[1] = self.panel:getModule(9, 6, 1)
         self.modules.flow.knobs.heavy[2] = self.panel:getModule(9, 3, 1)
         self.modules.flow.knobs.heavy[3] = self.panel:getModule(9, 0, 1)
-
-        -- Initialize flow displays
-        self.modules.flow.displays.crude[1] = self.panel:getModule(2, 5, 1)
-        self.modules.flow.displays.crude[2] = self.panel:getModule(2, 2, 1)
-        self.modules.flow.displays.heavy[1] = self.panel:getModule(9, 8, 1)
-        self.modules.flow.displays.heavy[2] = self.panel:getModule(9, 5, 1)
-        self.modules.flow.displays.heavy[3] = self.panel:getModule(9, 2, 1)
     end
 
     function Display:initializePowerModules()
