@@ -51,20 +51,21 @@ function Monitoring:cleanup()
 end
 
 function Monitoring:calculateTotalPolymerOutput()
+    local BASE_RECIPE_OUTPUT = 20 -- Set your base recipe output here
     local total_output = 0
 
     for _, refinery in ipairs(self.refineries) do
         if refinery and not refinery.standby then
             local productivity = tonumber(refinery.productivity) or 0
-            local cycleTime = refinery.cycleTime or 6        -- Default to 6 if nil
-            local potential = refinery.currentPotential or 1 -- Default to 1 if nil
+            local cycleTime = refinery.cycleTime or 6
+            local potential = refinery.currentPotential or 1
 
             -- Calculate recipes per minute considering cycle time and overclock
             local recipesPerMinute = (60 / cycleTime) * potential
 
             -- Calculate output for this machine
-            -- Base output * (productivity percentage) * recipes per minute
-            local machine_output = (productivity / 100) * recipesPerMinute
+            -- Base recipe output * (productivity percentage) * recipes per minute
+            local machine_output = BASE_RECIPE_OUTPUT * (productivity / 100) * recipesPerMinute
 
             total_output = total_output + machine_output
         end
