@@ -7,7 +7,7 @@ local Monitoring = {
     emergency_state = false,
     display = nil,
     networkCard = nil,
-    light_switch = nil -- Add light switch property
+    light_switch = nil
 }
 
 function Monitoring:new(display, dependencies)
@@ -42,6 +42,35 @@ function Monitoring:initialize()
 
     event.listen(self.display.factory.emergency_stop)
     self.utils.setComponentColor(self.display.factory.emergency_stop, self.colors.STATUS.OFF, self.colors.EMIT.OFF)
+end
+
+function Monitoring:cleanup()
+    if self.display and self.display.factory and self.display.factory.emergency_stop then
+        event.clear(self.display.factory.emergency_stop)
+    end
+end
+
+function Monitoring:calculateTotalPolymerOutput()
+    local total_output = 0
+
+    for _, refinery in ipairs(self.refineries) do
+        if refinery and not refinery.standby then
+            local productivity = tonumber(refinery.productivity) or 0
+            local cycleTime = refinery.cycleTime or 6        -- Default to 6 if nil
+            local potential = refinery.currentPotential or 1 -- Default to 1 if nil
+
+            -- Calculate recipes per minute considering cycle time and overclock
+            local recipesPerMinute = (60 / cycleTime) * potential
+
+            -- Calculate output for this machine
+            -- Base output * (productivity percentage) * recipes per minute
+            local machine_output = (productivity / 100) * recipesPerMinute
+
+            total_output = total_output + machine_output
+        end
+    end
+
+    return total_output
 end
 
 function Monitoring:handleEmergencyStop()
@@ -86,13 +115,19 @@ function Monitoring:updateProductivityHistory()
                 self:updateGaugeColor(self.display.factory.gauges[i], prod)
             else
                 self.display.factory.gauges[i].percent = 0
-                self.utils.setComponentColor(self.display.factory.gauges[i], self.colors.STATUS.OFF, self.colors.EMIT
-                    .GAUGE)
+                self.utils.setComponentColor(self.display.factory.gauges[i], self.colors.STATUS.OFF,
+                    self.colors.EMIT.GAUGE)
             end
         end
 
         -- Update button colors regardless of gauge existence
         self:updateButtonColor(i)
+    end
+
+    -- Calculate and update polymer output display
+    local total_polymer = self:calculateTotalPolymerOutput()
+    if self.display.flow.displays.total_polymer then
+        self.display.flow.displays.total_polymer:setText(string.format("%.1f/min", total_polymer))
     end
 
     if #self.productivity_history > self.config.HISTORY_LENGTH then
@@ -214,7 +249,7 @@ end
 function Monitoring:broadcastRefineryStatus()
     for i, refinery in ipairs(self.refineries) do
         local status = self:getRefineryStatus(refinery)
-        if self.networkCard then -- Use the instance network card
+        if self.networkCard then
             self.networkCard:broadcast(100, "refinery_update", {
                 "refinery_" .. i,
                 status,
