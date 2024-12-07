@@ -36,38 +36,47 @@ function Power:initialize()
         error("Failed to initialize power switches")
     end
 
-    -- Test switch functionality
-    print("Testing power switch functionality...")
-    print("Initial power switch state:", self.power_switch.isSwitchOn)
-
-    -- Try toggling the switch
-    local currentState = self.power_switch.isSwitchOn
-    print("Attempting to toggle power switch...")
-    pcall(function()
-        self.power_switch:setIsSwitchOn(not currentState)
-        print("New state:", self.power_switch.isSwitchOn)
-        -- Toggle back
-        self.power_switch:setIsSwitchOn(currentState)
-        print("Restored state:", self.power_switch.isSwitchOn)
-    end)
-
-    -- Test event registration
-    print("Testing switch event registration...")
-    print("MAIN switch Hash:", self.display.power.switches.MAIN.Hash)
-    print("BATTERY switch Hash:", self.display.power.switches.BATTERY.Hash)
-
     -- Setup initial switch states and controls
     self:setupPowerControls()
 
     -- Set up initial states for switches based on actual power switch positions
     self.display.power.switches.MAIN.state = self.power_switch.isSwitchOn
     self.display.power.switches.BATTERY.state = self.battery_switch.isSwitchOn
-    print("Set initial MAIN switch state to:", self.display.power.switches.MAIN.state)
-    print("Set initial BATTERY switch state to:", self.display.power.switches.BATTERY.state)
 
     -- Register event listeners for switches
     event.listen(self.display.power.switches.MAIN)
     event.listen(self.display.power.switches.BATTERY)
+
+    -- Get all circuits
+    local main_circuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
+    local factory_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
+    local battery_circuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
+
+    -- Listen for fuse events on all circuits
+    event.listen(main_circuit)
+    event.listen(factory_circuit)
+    event.listen(battery_circuit)
+end
+
+function Power:handleFuseEvent(circuit)
+    -- Identify which circuit triggered and update indicators
+    local main_circuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
+    local factory_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
+    local battery_circuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
+
+    if circuit == main_circuit then
+        self.utils.setComponentColor(self.display.power.indicators.MAIN,
+            circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
+            self.colors.EMIT.INDICATOR)
+    elseif circuit == factory_circuit then
+        self.utils.setComponentColor(self.display.power.indicators.FACTORY,
+            circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
+            self.colors.EMIT.INDICATOR)
+    elseif circuit == battery_circuit then
+        self.utils.setComponentColor(self.display.power.indicators.BATTERY,
+            circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
+            self.colors.EMIT.INDICATOR)
+    end
 end
 
 function Power:setupPowerControls()

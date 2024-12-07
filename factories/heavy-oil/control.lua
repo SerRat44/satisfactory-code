@@ -77,70 +77,44 @@ return function(dependencies)
 
             if not success then
                 print("Error during event pull: " .. tostring(e))
-                print("Attempting to reinitialize power module...")
-                pcall(function()
-                    power:initialize()
-                    print("Power module reinitialized")
-                end)
-                goto continue
-            end
-
-            -- Debug output for events
-            if e then
-                print("Event received:", e)
-                if s then
-                    print("Source:", s)
-                    if s.Hash then
-                        print("Source Hash:", s.Hash)
-                    end
+                -- Try to reinitialize power module
+                if power then
+                    print("Attempting to reinitialize power module...")
+                    pcall(function() power:initialize() end)
                 end
-            end
-
-            if e == "ChangeState" then
-                print("Processing ChangeState event...")
-                if s and s.Hash then
-                    print("Switch Hash:", s.Hash)
+            else
+                if e == "ChangeState" then
                     local powerAction = power.powerControls[s.Hash]
                     if powerAction then
-                        print("Executing power action for switch...")
                         powerAction()
-                        print("Power action completed")
-                    else
-                        print("WARNING: No power action found for Hash:", s.Hash)
                     end
-                else
-                    print("WARNING: Invalid switch event - no Hash found")
-                end
-            elseif e == "Trigger" then
-                print("Processing Trigger event...")
-                if s == modules.factory.emergency_stop then
-                    print("Emergency stop triggered")
-                    monitoring:handleEmergencyStop()
-                else
-                    for i, button in ipairs(modules.factory.buttons) do
-                        if s == button then
-                            print("Factory button", i, "pressed")
-                            monitoring:handleButtonPress(i)
-                            break
+                elseif e == "Trigger" then
+                    if s == modules.factory.emergency_stop then
+                        monitoring:handleEmergencyStop()
+                    else
+                        for i, button in ipairs(modules.factory.buttons) do
+                            if s == button then
+                                monitoring:handleButtonPress(i)
+                                break
+                            end
                         end
                     end
+                elseif e == "NetworkMessage" then
+                    handleNetworkMessage(type, data)
+                elseif e == "powerFuseChanged" then
+                    -- Handle fuse state changes
+                    power:handleFuseEvent(s)
                 end
-            elseif e == "NetworkMessage" then
-                print("Processing NetworkMessage:", type)
-                handleNetworkMessage(type, data)
+
+                monitoring:updateProductivityHistory()
+                power:updatePowerDisplays()
+                power:updatePowerIndicators()
+
+                if dataCollectionActive then
+                    monitoring:broadcastRefineryStatus()
+                    power:broadcastPowerStatus()
+                end
             end
-
-            -- Regular updates
-            monitoring:updateProductivityHistory()
-            power:updatePowerDisplays()
-            power:updatePowerIndicators()
-
-            if dataCollectionActive then
-                monitoring:broadcastRefineryStatus()
-                power:broadcastPowerStatus()
-            end
-
-            ::continue::
         end
     end
 
