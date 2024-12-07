@@ -107,8 +107,10 @@ return function(dependencies)
                         print("Power action completed")
                     else
                         print("WARNING: No power action found for Hash:", s.Hash)
-                        print("Reinitializing power controls...")
-                        self:setupPowerControls()
+                        -- Log available hashes for debugging
+                        for registeredHash in pairs(self.powerControls) do
+                            print("Registered Hash:", registeredHash)
+                        end
                     end
                 else
                     print("WARNING: Invalid switch event - no Hash found")
