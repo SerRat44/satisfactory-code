@@ -198,7 +198,7 @@ function Monitoring:updateButtonColor(index)
         end
 
         -- Get productivity value
-        local productivity = tonumber(refinery.productivity) or 0
+        local productivity = refinery.productivity or 0
 
         -- Set color based on productivity thresholds
         if productivity >= 0.95 then
