@@ -56,11 +56,11 @@ function Monitoring:calculateTotalPolymerOutput()
 
     for _, refinery in ipairs(self.refineries) do
         if refinery and not refinery.standby then
-            local productivity = tonumber(refinery.productivity) or 0 -- Already 0-1 scale
+            local productivity = refinery.productivity or 0 -- Already 0-1 scale
             local potential = refinery.currentPotential or 1
 
             -- Calculate output using direct per-minute value
-            local machine_output = POLYMER_PER_MINUTE * productivity
+            local machine_output = POLYMER_PER_MINUTE * productivity * potential
 
             -- Debug output for each machine
             print(string.format("Machine stats:"))
@@ -207,7 +207,7 @@ function Monitoring:updateButtonColor(index)
         elseif productivity >= 0.5 then
             self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.IDLE,
                 self.colors.EMIT.BUTTON)
-        elseif productivity >= 0 then
+        else
             self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.WARNING,
                 self.colors.EMIT.BUTTON)
         end
