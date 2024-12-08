@@ -5,7 +5,8 @@ return function(dependencies)
     local config = dependencies.config
     local DisplayConstructor = dependencies.display
     local Power = dependencies.power
-    local Monitoring = dependencies.monitoring
+    local FlowMonitoring = dependencies.flowMonitoring
+    local ProductivityMonitoring = dependencies.productivityMonitoring
 
     -- Create the Display class
     local Display = DisplayConstructor({ colors = colors, config = config })
@@ -16,7 +17,7 @@ return function(dependencies)
     -- Local variables for module state
     local dataCollectionActive = true
     local running = true
-    local display, power, monitoring, modules, networkCard
+    local display, power, flowMonitoring, productivityMonitoring, modules, networkCard
 
     -- Create the control module table
     local controlModule = {}
@@ -36,13 +37,15 @@ return function(dependencies)
         if networkCard then
             event.clear(networkCard)
         end
-        -- Clean up power module
+        -- Clean up modules
         if power then
             power:cleanup()
         end
-        -- Clean up monitoring module
-        if monitoring then
-            monitoring:cleanup()
+        if flowMonitoring then
+            flowMonitoring:cleanup()
+        end
+        if productivityMonitoring then
+            productivityMonitoring:cleanup()
         end
         -- Clear all remaining events
         event.clear()
@@ -78,16 +81,19 @@ return function(dependencies)
             error("Network card not found!")
         end
 
-        -- Create power and monitoring instances
+        -- Create module instances
         power = Power:new(modules, dependencies)
-        monitoring = Monitoring:new(modules, dependencies)
+        flowMonitoring = FlowMonitoring:new(modules, dependencies)
+        productivityMonitoring = ProductivityMonitoring:new(modules, dependencies)
 
         print("Initializing components...")
         -- Clear any existing event listeners before initializing
         event.clear()
 
+        -- Initialize all modules
         power:initialize()
-        monitoring:initialize()
+        flowMonitoring:initialize(config.VALVE_CONFIG)
+        productivityMonitoring:initialize(config)
 
         print("Network card found. Opening port 101...")
         networkCard:open(101)
@@ -133,12 +139,12 @@ return function(dependencies)
                 print("Processing Trigger event...")
                 if s == modules.factory.emergency_stop then
                     print("Emergency stop triggered")
-                    monitoring:handleEmergencyStop()
+                    productivityMonitoring:handleEmergencyStop()
                 else
                     for i, button in ipairs(modules.factory.buttons) do
                         if s == button then
                             print("Factory button", i, "pressed")
-                            monitoring:handleButtonPress(i)
+                            productivityMonitoring:handleButtonPress(i)
                             break
                         end
                     end
@@ -150,12 +156,16 @@ return function(dependencies)
 
             -- Regular updates with error handling
             local updateSuccess, updateError = pcall(function()
-                monitoring:updateProductivityHistory()
+                -- Update all monitoring systems
+                productivityMonitoring:updateProductivityHistory()
+                flowMonitoring:updateFlowDisplays()
                 power:updatePowerDisplays()
                 power:updatePowerIndicators()
 
+                -- Broadcast status if data collection is active
                 if dataCollectionActive then
-                    monitoring:broadcastRefineryStatus()
+                    productivityMonitoring:broadcastMachineStatus()
+                    flowMonitoring:broadcastFlowStatus()
                     power:broadcastPowerStatus()
                 end
             end)
