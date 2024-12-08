@@ -45,7 +45,6 @@ return {
         "BE13C59148ACB3079913E498E3CB6D87",
         "29CE0F114F66EB494941179A738BE076"
     },
-
     COMPONENT_IDS = {
         POWER_SWITCH = "D29CF4FE4E0E688D1BDCA5A656156CF9",
         BATTERY_SWITCH = "D41817DE4531874AD41C0E8AA61CAC3A",
@@ -63,7 +62,20 @@ return {
                 "D9F6A4F64268576DA45D728E43ED87CB"
             }
         }
+    },
+    DISPLAY_LAYOUT = {
+        PRODUCTIVITY_ROWS = {
+            -- First row of 10 machines
+            { startX = 1, startY = 2, panelNum = 0, count = 10 },
+            -- Second row of 10 machines
+            { startX = 1, startY = 0, panelNum = 0, count = 10 },
+            -- Third row of 10 machines
+            { startX = 1, startY = 7, panelNum = 0, count = 10 },
+            -- Fourth row of 10 machines
+            { startX = 1, startY = 5, panelNum = 0, count = 10 }
+        },
+        EMERGENCY_STOP = { x = 10, y = 10, z = 0 },
+        HEALTH_INDICATOR = { x = 1, y = 10, z = 0 },
+        PRODUCTIVITY_DISPLAY = { x = 2, y = 9, z = 0 }
     }
-
-
 }

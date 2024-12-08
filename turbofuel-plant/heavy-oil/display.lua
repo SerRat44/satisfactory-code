@@ -46,7 +46,10 @@ return function(dependencies)
                 displays = {
                     crude = {},
                     heavy = {},
-                    polymer = nil
+                    polymer = nil,
+                    total_crude_in = nil,
+                    total_heavy_out = nil,
+                    total_polymer = nil
                 },
                 knobs = {
                     crude = {},
@@ -56,72 +59,40 @@ return function(dependencies)
         }
     }
 
-    function Display:new(display_panel)
-        print("Creating new display instance...")
-        if not display_panel then
-            error("Display panel is required")
-        end
-
-        -- Test the panel immediately
-        print("Testing panel in new()...")
-        local success = pcall(function()
-            local test_module = display_panel:getModule(0, 0, 0)
-            print("Test module retrieved:", test_module ~= nil)
+    -- Helper function to get module safely
+    local function getModuleIfExists(panel, x, y, z)
+        local success, module = pcall(function()
+            return panel:getModule(x, y, z)
         end)
-        print("Panel test result:", success)
-
-        if not success then
-            error("Display panel does not support getModule method")
-        end
-
-        local instance = {}
-        setmetatable(instance, { __index = self })
-        instance.panel = display_panel
-
-        return instance
+        return success and module or nil
     end
 
-    function Display:initialize()
-        print("Starting display initialization...")
-        -- Test panel at start of initialize
-        local test = pcall(function()
-            local module = self.panel:getModule(0, 0, 0)
-            print("Initialize test module:", module ~= nil)
-        end)
-        print("Initialize panel test:", test)
+    function Display:initializeMachineRow(startX, startY, panelNum, count)
+        for i = 0, count - 1 do
+            local buttonIndex = #self.modules.factory.buttons + 1
+            local x = startX + i
 
-        -- Factory panel initialization
-        self:initializeFactoryModules()
-        self:initializeFlowModules()
-        self:initializePowerModules()
-        return self.modules
+            -- Initialize button
+            local button = getModuleIfExists(self.panel, x, startY, panelNum)
+            if button then
+                self.modules.factory.buttons[buttonIndex] = button
+
+                -- Initialize corresponding gauge (one unit above button)
+                local gauge = getModuleIfExists(self.panel, x, startY - 1, panelNum)
+                if gauge then
+                    gauge.limit = 1
+                    self.modules.factory.gauges[buttonIndex] = gauge
+                end
+            end
+        end
     end
 
     function Display:initializeFactoryModules()
-        -- Initialize refinery buttons
-        local button_coords = {
-            { 1, 2, 0 }, { 2, 2, 0 }, { 3, 2, 0 }, { 4, 2, 0 }, { 5, 2, 0 }, { 6, 2, 0 }, { 7, 2, 0 }, { 8, 2, 0 }, { 9, 2, 0 }, { 10, 2, 0 },
-            { 1, 0, 0 }, { 2, 0, 0 }, { 3, 0, 0 }, { 4, 0, 0 }, { 5, 0, 0 }, { 6, 0, 0 }, { 7, 0, 0 }, { 8, 0, 0 }, { 9, 0, 0 }, { 10, 0, 0 },
-            { 1, 7, 0 }, { 2, 7, 0 }, { 3, 7, 0 }, { 4, 7, 0 }, { 5, 7, 0 }, { 6, 7, 0 }, { 7, 7, 0 }, { 8, 7, 0 }, { 9, 7, 0 }, { 10, 7, 0 },
-            { 1, 5, 0 }, { 2, 5, 0 }, { 3, 5, 0 }, { 4, 5, 0 }, { 5, 5, 0 }, { 6, 5, 0 }, { 7, 5, 0 }, { 8, 5, 0 }, { 9, 5, 0 }, { 10, 5, 0 }
-        }
-
-        -- Initialize refinery gauges
-        local gauge_coords = {
-            { 1, 3, 0 }, { 2, 3, 0 }, { 3, 3, 0 }, { 4, 3, 0 }, { 5, 3, 0 }, { 6, 3, 0 }, { 7, 3, 0 }, { 8, 3, 0 }, { 9, 3, 0 }, { 10, 3, 0 },
-            { 1, 1, 0 }, { 2, 1, 0 }, { 3, 1, 0 }, { 4, 1, 0 }, { 5, 1, 0 }, { 6, 1, 0 }, { 7, 1, 0 }, { 8, 1, 0 }, { 9, 1, 0 }, { 10, 1, 0 },
-            { 1, 8, 0 }, { 2, 8, 0 }, { 3, 8, 0 }, { 4, 8, 0 }, { 5, 8, 0 }, { 6, 8, 0 }, { 7, 8, 0 }, { 8, 8, 0 }, { 9, 8, 0 }, { 10, 8, 0 },
-            { 1, 6, 0 }, { 2, 6, 0 }, { 3, 6, 0 }, { 4, 6, 0 }, { 5, 6, 0 }, { 6, 6, 0 }, { 7, 6, 0 }, { 8, 6, 0 }, { 9, 6, 0 }, { 10, 6, 0 }
-        }
-
-        for i, coords in ipairs(button_coords) do
-            self.modules.factory.buttons[i] = self.panel:getModule(table.unpack(coords))
-        end
-
-        for i, coords in ipairs(gauge_coords) do
-            self.modules.factory.gauges[i] = self.panel:getModule(table.unpack(coords))
-            self.modules.factory.gauges[i].limit = 1
-        end
+        -- Initialize machine rows
+        self:initializeMachineRow(1, 2, 0, 10) -- First row
+        self:initializeMachineRow(1, 0, 0, 10) -- Second row
+        self:initializeMachineRow(1, 7, 0, 10) -- Third row
+        self:initializeMachineRow(1, 5, 0, 10) -- Fourth row
 
         -- Initialize other factory modules
         self.modules.factory.emergency_stop = self.panel:getModule(10, 10, 0)
@@ -144,7 +115,7 @@ return function(dependencies)
         self.modules.flow.displays.heavy[2] = self.panel:getModule(9, 6, 1)
         self.modules.flow.displays.heavy[3] = self.panel:getModule(9, 3, 1)
 
-        -- total in/out displays
+        -- Initialize total displays
         self.modules.flow.displays.total_crude_in = self.panel:getModule(1, 0, 1)
         self.modules.flow.displays.total_heavy_out = self.panel:getModule(8, 0, 1)
         self.modules.flow.displays.total_polymer = self.panel:getModule(5, 0, 1)
@@ -180,6 +151,48 @@ return function(dependencies)
         self.modules.power.POWER_DISPLAYS.MAIN_PRODUCED = self.panel:getModule(1, 3, 2)
         self.modules.power.POWER_DISPLAYS.MAIN_USED = self.panel:getModule(2, 3, 2)
         self.modules.power.POWER_DISPLAYS.FACTORY_USED = self.panel:getModule(5, 3, 2)
+    end
+
+    function Display:new(display_panel)
+        print("Creating new display instance...")
+        if not display_panel then
+            error("Display panel is required")
+        end
+
+        -- Test the panel immediately
+        print("Testing panel in new()...")
+        local success = pcall(function()
+            local test_module = display_panel:getModule(0, 0, 0)
+            print("Test module retrieved:", test_module ~= nil)
+        end)
+        print("Panel test result:", success)
+
+        if not success then
+            error("Display panel does not support getModule method")
+        end
+
+        local instance = {}
+        setmetatable(instance, { __index = self })
+        instance.panel = display_panel
+
+        return instance
+    end
+
+    function Display:initialize()
+        print("Starting display initialization...")
+        -- Test panel at start of initialize
+        local test = pcall(function()
+            local module = self.panel:getModule(0, 0, 0)
+            print("Initialize test module:", module ~= nil)
+        end)
+        print("Initialize panel test:", test)
+
+        -- Initialize all module types
+        self:initializeFactoryModules()
+        self:initializeFlowModules()
+        self:initializePowerModules()
+
+        return self.modules
     end
 
     return Display
