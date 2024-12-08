@@ -77,10 +77,10 @@ return function(dependencies)
             if button then
                 self.modules.factory.buttons[buttonIndex] = button
 
-                -- Initialize corresponding gauge (one unit above button)
-                local gauge = getModuleIfExists(self.panel, x, startY - 1, panelNum)
+                -- Initialize corresponding gauge (one unit BELOW button)
+                local gauge = getModuleIfExists(self.panel, x, startY + 1, panelNum)
                 if gauge then
-                    gauge.limit = 1
+                    initializeGauge(gauge)
                     self.modules.factory.gauges[buttonIndex] = gauge
                 end
             end
