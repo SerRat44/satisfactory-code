@@ -22,26 +22,28 @@ end
 function loadFiles()
     print("Starting file downloads...")
 
-    -- Load and compile common files first
-    print("Loading colors.lua...")
-    local colorData = downloadFromGithub("common/colors.lua")
-    print("Compiling colors.lua...")
-    local colorFn, err = load(colorData)
-    if not colorFn then error("Failed to compile colors.lua: " .. err) end
-    local colors = colorFn()
-    print("Colors loaded successfully")
+    -- Load and compile common utilities first
+    local commonModules = {
+        colors = downloadFromGithub("common/colors.lua"),
+        utils = downloadFromGithub("common/utils.lua"),
+        flowMonitoring = downloadFromGithub("common/flow_monitoring.lua"),
+        productivityMonitoring = downloadFromGithub("common/productivity_monitoring.lua")
+    }
 
-    print("Loading utils.lua...")
-    local utilsData = downloadFromGithub("common/utils.lua")
-    print("Compiling utils.lua...")
-    local utilsFn, err = load(utilsData)
-    if not utilsFn then error("Failed to compile utils.lua: " .. err) end
-    local utils = utilsFn()
-    print("Utils loaded successfully")
+    -- Compile common modules
+    local compiledCommon = {}
+    for name, code in pairs(commonModules) do
+        print("Compiling " .. name .. ".lua...")
+        local fn, err = load(code)
+        if not fn then error("Failed to compile " .. name .. ".lua: " .. err) end
+        compiledCommon[name] = fn()
+        print(name .. " loaded successfully")
+    end
 
     -- Load factory-specific files
-    local base_path = "factories/" .. FACTORY_NAME .. "/"
+    local base_path = "turbofuel-plant/" .. FACTORY_NAME .. "/"
 
+    -- Load and compile config
     print("Loading config.lua...")
     local configData = downloadFromGithub(base_path .. "config.lua")
     print("Compiling config.lua...")
@@ -50,58 +52,59 @@ function loadFiles()
     local config = configFn()
     print("Config loaded successfully")
 
-    print(config.COMPONENT_IDS.DISPLAY_PANEL)
+    -- Load and compile factory-specific modules
+    local factoryModules = {
+        display = downloadFromGithub(base_path .. "display.lua"),
+        power = downloadFromGithub(base_path .. "power.lua"),
+        control = downloadFromGithub(base_path .. "control.lua")
+    }
 
-    -- Load and compile modules with dependencies
-    print("Loading display.lua...")
-    local displayData = downloadFromGithub(base_path .. "display.lua")
+    -- Create base dependencies object
+    local dependencies = {
+        colors = compiledCommon.colors,
+        utils = compiledCommon.utils,
+        config = config
+    }
+
+    -- Compile and initialize factory modules
     print("Compiling display.lua...")
-    local displayFn, err = load(displayData)
+    local displayFn, err = load(factoryModules.display)
     if not displayFn then error("Failed to compile display.lua: " .. err) end
-    local Display = displayFn({ colors = colors, config = config }) -- Execute with dependencies
+    local Display = displayFn(dependencies)
     if not Display then error("Failed to create Display class") end
     print("Display loaded successfully")
 
-    print("Loading power.lua...")
-    local powerData = downloadFromGithub(base_path .. "power.lua")
     print("Compiling power.lua...")
-    local powerFn, err = load(powerData)
+    local powerFn, err = load(factoryModules.power)
     if not powerFn then error("Failed to compile power.lua: " .. err) end
-    local power = powerFn({ colors = colors, utils = utils, config = config })
+    local power = powerFn(dependencies)
     print("Power loaded successfully")
 
-    print("Loading monitoring.lua...")
-    local monitoringData = downloadFromGithub(base_path .. "monitoring.lua")
-    print("Compiling monitoring.lua...")
-    local monitoringFn, err = load(monitoringData)
-    if not monitoringFn then error("Failed to compile monitoring.lua: " .. err) end
-    local monitoring = monitoringFn({ colors = colors, utils = utils, config = config })
-    print("Monitoring loaded successfully")
+    -- Initialize monitoring modules
+    local flowMonitoring = compiledCommon.flowMonitoring
+    local productivityMonitoring = compiledCommon.productivityMonitoring
 
-    print("Loading control.lua...")
-    local controlData = downloadFromGithub(base_path .. "control.lua")
+    -- Create complete dependencies object for control module
+    dependencies.display = Display
+    dependencies.power = power
+    dependencies.flowMonitoring = flowMonitoring
+    dependencies.productivityMonitoring = productivityMonitoring
+
+    -- Load and initialize control module
     print("Compiling control.lua...")
-    local controlFn, err = load(controlData)
+    local controlFn, err = load(factoryModules.control)
     if not controlFn then error("Failed to compile control.lua: " .. err) end
 
-    -- Create and execute the control module factory function
     print("Creating control module...")
     local controlModuleFactory = controlFn()
     if type(controlModuleFactory) ~= "function" then
         error("Control module must return a factory function, got " .. type(controlModuleFactory))
     end
 
-    -- Execute the factory function with dependencies to get the actual module
-    local controlModule = controlModuleFactory({
-        colors = colors,
-        utils = utils,
-        config = config,
-        display = Display, -- Pass the actual Display class
-        power = power,
-        monitoring = monitoring
-    })
+    -- Execute the factory function with all dependencies
+    local controlModule = controlModuleFactory(dependencies)
 
-    -- Verify the control module has the required structure
+    -- Verify the control module
     if type(controlModule) ~= "table" then
         error("Control module must return a table, got " .. type(controlModule))
     end
