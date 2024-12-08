@@ -113,16 +113,16 @@ end
 
 function ProductivityMonitoring:getAvgProductivity()
     local total_productivity = 0
-    local active_refineries = 0
+    local active_machines = 0
 
-    for _, refinery in ipairs(self.refineries) do
-        if refinery and not refinery.standby then
-            total_productivity = total_productivity + refinery.productivity
-            active_refineries = active_refineries + 1
+    for _, machine in ipairs(self.machines) do -- Changed from self.refineries
+        if machine and not machine.standby then
+            total_productivity = total_productivity + machine.productivity
+            active_machines = active_machines + 1
         end
     end
 
-    local current_prod = active_refineries > 0 and (total_productivity / active_refineries) or 0
+    local current_prod = active_machines > 0 and (total_productivity / active_machines) or 0
     table.insert(self.productivity_history, current_prod)
     self.current_productivity = current_prod
 
@@ -148,18 +148,18 @@ function ProductivityMonitoring:updateProductivityIndicator()
 end
 
 function ProductivityMonitoring:updateButtonColor(index)
-    if self.display.factory.buttons[index] and self.refineries[index] then
-        local refinery = self.refineries[index]
+    if self.display.factory.buttons[index] and self.machines[index] then -- Changed from self.refineries
+        local machine = self.machines[index]                             -- Changed from refinery
 
-        -- First check if refinery exists and is not in standby
-        if not refinery or refinery.standby then
+        -- First check if machine exists and is not in standby
+        if not machine or machine.standby then
             self.utils.setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.OFF,
                 self.colors.EMIT.BUTTON)
             return
         end
 
         -- Get productivity value
-        local productivity = refinery.productivity
+        local productivity = machine.productivity
 
         -- Set color based on productivity thresholds
         if productivity >= 0.95 then
@@ -193,31 +193,29 @@ function ProductivityMonitoring:updateAllButtons()
     end
 end
 
-function ProductivityMonitoring:getRefineryStatus(refinery)
-    if not refinery then return "OFF" end
-    if refinery.standby then return "OFF" end
+function ProductivityMonitoring:getMachineStatus(machine)
+    if not machine then return "OFF" end
+    if machine.standby then return "OFF" end
 
-    local productivity = tonumber(refinery.productivity) or 0
+    local productivity = tonumber(machine.productivity) or 0
 
     if productivity >= 0.95 then
         return "WORKING"
     elseif productivity >= 0.50 then
-        return "IDLE"
-    elseif productivity >= 0 then
         return "WARNING"
     else
-        return "OFF"
+        return "IDLE"
     end
 end
 
-function ProductivityMonitoring:broadcastRefineryStatus()
-    for i, refinery in ipairs(self.refineries) do
-        local status = self:getRefineryStatus(refinery)
+function ProductivityMonitoring:broadcastMachineStatus()
+    for i, machine in ipairs(self.machines) do
+        local status = self:getMachineStatus(machine)           -- Renamed from getRefineryStatus
         if self.networkCard then
-            self.networkCard:broadcast(100, "refinery_update", {
-                "refinery_" .. i,
+            self.networkCard:broadcast(100, "machine_update", { -- Changed from refinery_update
+                "machine_" .. i,                                -- Changed from refinery_
                 status,
-                refinery.productivity
+                machine.productivity
             })
         end
     end

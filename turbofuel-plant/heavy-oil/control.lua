@@ -81,10 +81,18 @@ return function(dependencies)
             error("Network card not found!")
         end
 
+        -- Create module instances with correct dependencies
+        local modulesDependencies = {
+            colors = colors,
+            utils = utils,
+            config = config,
+            display = modules -- Pass the initialized display modules
+        }
+
         -- Create module instances
-        power = Power:new(modules, dependencies)
-        flowMonitoring = FlowMonitoring:new(modules, dependencies)
-        productivityMonitoring = ProductivityMonitoring:new(modules, dependencies)
+        power = Power:new(modules, modulesDependencies)
+        flowMonitoring = FlowMonitoring:new(modules, modulesDependencies)
+        productivityMonitoring = ProductivityMonitoring:new(modules, modulesDependencies)
 
         print("Initializing components...")
         -- Clear any existing event listeners before initializing
@@ -92,8 +100,20 @@ return function(dependencies)
 
         -- Initialize all modules
         power:initialize()
-        flowMonitoring:initialize(config.VALVE_CONFIG)
-        productivityMonitoring:initialize(config)
+
+        -- Only initialize flow monitoring if valve config exists
+        if config.VALVE_CONFIG then
+            flowMonitoring:initialize(config.VALVE_CONFIG)
+        else
+            print("Warning: No valve configuration found, skipping flow monitoring initialization")
+        end
+
+        -- Initialize productivity monitoring with machine IDs
+        local monitoringConfig = {
+            COMPONENT_IDS = config.COMPONENT_IDS,
+            MACHINE_IDS = config.REFINERY_IDS -- Use existing refinery IDs
+        }
+        productivityMonitoring:initialize(monitoringConfig)
 
         print("Network card found. Opening port 101...")
         networkCard:open(101)
@@ -158,14 +178,18 @@ return function(dependencies)
             local updateSuccess, updateError = pcall(function()
                 -- Update all monitoring systems
                 productivityMonitoring:updateProductivityHistory()
-                flowMonitoring:updateFlowDisplays()
+                if config.VALVE_CONFIG then
+                    flowMonitoring:updateFlowDisplays()
+                end
                 power:updatePowerDisplays()
                 power:updatePowerIndicators()
 
                 -- Broadcast status if data collection is active
                 if dataCollectionActive then
                     productivityMonitoring:broadcastMachineStatus()
-                    flowMonitoring:broadcastFlowStatus()
+                    if config.VALVE_CONFIG then
+                        flowMonitoring:broadcastFlowStatus()
+                    end
                     power:broadcastPowerStatus()
                 end
             end)
