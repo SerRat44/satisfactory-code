@@ -67,6 +67,19 @@ return function(dependencies)
         return success and module or nil
     end
 
+    local function initializeGauge(gauge)
+        if not gauge then return end
+
+        -- Safely try to set gauge properties
+        pcall(function()
+            if gauge.setLimit then
+                gauge:setLimit(1)
+            elseif type(gauge.limit) == "number" then
+                gauge.limit = 1
+            end
+        end)
+    end
+
     function Display:initializeMachineRow(startX, startY, panelNum, count)
         for i = 0, count - 1 do
             local buttonIndex = #self.modules.factory.buttons + 1
