@@ -1,4 +1,4 @@
--- factories/heavy-oil/power.lua
+-- turbofuel-plant/heavy-oil/power.lua
 
 local Power = {
     power_switch = nil,

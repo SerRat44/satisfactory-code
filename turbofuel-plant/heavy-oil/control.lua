@@ -1,4 +1,4 @@
--- factories/heavy-oil/control.lua
+-- turbofuel-plant/heavy-oil/control.lua
 return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils

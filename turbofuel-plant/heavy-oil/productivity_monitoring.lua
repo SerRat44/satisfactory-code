@@ -1,16 +1,16 @@
--- factories/heavy-oil/monitoring.lua
+-- turbofuel-plant/common/productivity_monitoring.lua
 
-local Monitoring = {
-    refineries = {},
+local ProductivityMonitoring = {
+    display = nil,
+    machines = {},
     productivity_history = {},
     current_productivity = 0,
     emergency_state = false,
-    display = nil,
     networkCard = nil,
     light_switch = nil
 }
 
-function Monitoring:new(display, dependencies)
+function ProductivityMonitoring:new(display, dependencies)
     local instance = {}
     setmetatable(instance, { __index = self })
     instance.display = display
@@ -22,67 +22,38 @@ function Monitoring:new(display, dependencies)
     -- Initialize network card
     instance.networkCard = computer.getPCIDevices(classes.NetworkCard)[1]
     if not instance.networkCard then
-        error("Network card not found in Monitoring module")
+        error("Network card not found in Productivity Monitoring module")
     end
 
     return instance
 end
 
-function Monitoring:initialize()
+function ProductivityMonitoring:initialize(config)
     -- Initialize light switch
-    self.light_switch = component.proxy(self.config.COMPONENT_IDS.LIGHT_SWITCH)
+    self.light_switch = component.proxy(config.COMPONENT_IDS.LIGHT_SWITCH)
     if not self.light_switch then
         error("Light switch not found")
     end
 
-    -- Initialize refineries
-    for i, id in ipairs(self.config.REFINERY_IDS) do
-        self.refineries[i] = component.proxy(id)
+    -- Initialize machines based on config
+    for i, id in ipairs(config.MACHINE_IDS) do
+        self.machines[i] = component.proxy(id)
     end
 
-    event.listen(self.display.factory.emergency_stop)
-    self.utils.setComponentColor(self.display.factory.emergency_stop, self.colors.STATUS.OFF, self.colors.EMIT.OFF)
-end
-
-function Monitoring:cleanup()
-    if self.display and self.display.factory and self.display.factory.emergency_stop then
-        event.clear(self.display.factory.emergency_stop)
+    -- Initialize emergency stop if it exists
+    if self.display.factory and self.display.factory.emergency_stop then
+        event.listen(self.display.factory.emergency_stop)
+        self.utils.setComponentColor(self.display.factory.emergency_stop, self.colors.STATUS.OFF, self.colors.EMIT.OFF)
     end
 end
 
-function Monitoring:calculateTotalPolymerOutput()
-    local POLYMER_PER_MINUTE = 20
-    local total_output = 0
-
-    for _, refinery in ipairs(self.refineries) do
-        if refinery and not refinery.standby then
-            local productivity = refinery.productivity
-            local potential = refinery.potential
-
-            -- Calculate output using direct per-minute value
-            local machine_output = POLYMER_PER_MINUTE * productivity * potential
-
-            -- Debug output for each machine
-            print(string.format("Machine stats:"))
-            print(string.format("  Productivity: %.2f", productivity))
-            print(string.format("  Potential: %.2fx", potential))
-            print(string.format("  Output: %.2f/min", machine_output))
-
-            total_output = total_output + machine_output
-        end
-    end
-
-    print(string.format("Total polymer output: %.2f/min", total_output))
-    return total_output
-end
-
-function Monitoring:handleEmergencyStop()
+function ProductivityMonitoring:handleEmergencyStop()
     self.emergency_state = not self.emergency_state
 
     if self.emergency_state then
-        for _, refinery in ipairs(self.refineries) do
-            if refinery then
-                refinery.standby = true
+        for _, machine in ipairs(self.machines) do
+            if machine then
+                machine.standby = true
             end
         end
         self.utils.setComponentColor(self.display.factory.emergency_stop, self.colors.STATUS.OFF, self.colors.EMIT
@@ -93,9 +64,9 @@ function Monitoring:handleEmergencyStop()
     else
         self.light_switch.colorSlot = 6
         self.utils.setComponentColor(self.display.factory.emergency_stop, self.colors.STATUS.OFF, self.colors.EMIT.OFF)
-        for _, refinery in ipairs(self.refineries) do
-            if refinery then
-                refinery.standby = false
+        for _, machine in ipairs(self.machines) do
+            if machine then
+                machine.standby = false
             end
         end
         self:updateProductivityIndicator()
@@ -104,15 +75,22 @@ function Monitoring:handleEmergencyStop()
     self:updateAllButtons()
 end
 
-function Monitoring:updateProductivityHistory()
+function ProductivityMonitoring:handleButtonPress(button_id)
+    local machine = self.machines[button_id]
+    if machine then
+        machine.standby = not machine.standby
+        self:updateButtonColor(button_id)
+    end
+end
+
+function ProductivityMonitoring:updateProductivityHistory()
     local current_prod = self:getAvgProductivity()
 
-    -- Update gauges and button colors together
-    for i, refinery in ipairs(self.refineries) do
-        -- Update gauge if it exists
+    -- Update gauges and button colors
+    for i, machine in ipairs(self.machines) do
         if self.display.factory.gauges[i] then
-            if refinery and not refinery.standby then
-                local prod = refinery.productivity
+            if machine and not machine.standby then
+                local prod = machine.productivity
                 self.display.factory.gauges[i].limit = 1
                 self.display.factory.gauges[i].percent = prod
                 self:updateGaugeColor(self.display.factory.gauges[i], prod)
@@ -122,15 +100,7 @@ function Monitoring:updateProductivityHistory()
                     self.colors.EMIT.GAUGE)
             end
         end
-
-        -- Update button colors regardless of gauge existence
         self:updateButtonColor(i)
-    end
-
-    -- Calculate and update polymer output display
-    local total_polymer = self:calculateTotalPolymerOutput()
-    if self.display.flow.displays.total_polymer then
-        self.display.flow.displays.total_polymer:setText(string.format("%.1f/min", total_polymer))
     end
 
     if #self.productivity_history > self.config.HISTORY_LENGTH then
@@ -138,11 +108,10 @@ function Monitoring:updateProductivityHistory()
     end
 
     self:updateProductivityIndicator()
-
     return current_prod
 end
 
-function Monitoring:getAvgProductivity()
+function ProductivityMonitoring:getAvgProductivity()
     local total_productivity = 0
     local active_refineries = 0
 
@@ -160,7 +129,7 @@ function Monitoring:getAvgProductivity()
     return current_prod
 end
 
-function Monitoring:updateProductivityIndicator()
+function ProductivityMonitoring:updateProductivityIndicator()
     if self.emergency_state then
         self.utils.setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.OFF,
             self.colors.EMIT.INDICATOR)
@@ -178,15 +147,7 @@ function Monitoring:updateProductivityIndicator()
     end
 end
 
-function Monitoring:handleButtonPress(button_id)
-    local refinery = self.refineries[button_id]
-    if refinery then
-        refinery.standby = not refinery.standby
-        self:updateButtonColor(button_id)
-    end
-end
-
-function Monitoring:updateButtonColor(index)
+function ProductivityMonitoring:updateButtonColor(index)
     if self.display.factory.buttons[index] and self.refineries[index] then
         local refinery = self.refineries[index]
 
@@ -214,7 +175,7 @@ function Monitoring:updateButtonColor(index)
     end
 end
 
-function Monitoring:updateGaugeColor(gauge, percent)
+function ProductivityMonitoring:updateGaugeColor(gauge, percent)
     if not gauge then return end
 
     if percent >= 0.95 then
@@ -226,13 +187,13 @@ function Monitoring:updateGaugeColor(gauge, percent)
     end
 end
 
-function Monitoring:updateAllButtons()
+function ProductivityMonitoring:updateAllButtons()
     for i = 1, #self.display.factory.buttons do
         self:updateButtonColor(i)
     end
 end
 
-function Monitoring:getRefineryStatus(refinery)
+function ProductivityMonitoring:getRefineryStatus(refinery)
     if not refinery then return "OFF" end
     if refinery.standby then return "OFF" end
 
@@ -249,7 +210,7 @@ function Monitoring:getRefineryStatus(refinery)
     end
 end
 
-function Monitoring:broadcastRefineryStatus()
+function ProductivityMonitoring:broadcastRefineryStatus()
     for i, refinery in ipairs(self.refineries) do
         local status = self:getRefineryStatus(refinery)
         if self.networkCard then
@@ -262,4 +223,10 @@ function Monitoring:broadcastRefineryStatus()
     end
 end
 
-return Monitoring
+function ProductivityMonitoring:cleanup()
+    if self.display and self.display.factory and self.display.factory.emergency_stop then
+        event.clear(self.display.factory.emergency_stop)
+    end
+end
+
+return ProductivityMonitoring
