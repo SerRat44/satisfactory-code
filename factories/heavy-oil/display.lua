@@ -120,7 +120,7 @@ return function(dependencies)
 
         for i, coords in ipairs(gauge_coords) do
             self.modules.factory.gauges[i] = self.panel:getModule(table.unpack(coords))
-            self.modules.factory.gauges[i].limit = 100
+            self.modules.factory.gauges[i].limit = 1
         end
 
         -- Initialize other factory modules
