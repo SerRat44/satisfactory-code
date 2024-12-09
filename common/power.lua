@@ -49,9 +49,9 @@ function Power:initialize()
     self:cleanup()
 
     -- Initialize switches
-    self.power_switch = component.proxy(self.config.COMPONENT_IDS.POWER_SWITCH)
-    self.battery_switch = component.proxy(self.config.COMPONENT_IDS.BATTERY_SWITCH)
-    self.light_switch = component.proxy(self.config.COMPONENT_IDS.LIGHT_SWITCH)
+    self.power_switch = component.proxy(self.config.POWER.POWER_SWITCH)
+    self.battery_switch = component.proxy(self.config.POWER.BATTERY_SWITCH)
+    self.light_switch = component.proxy(self.config.POWER.LIGHT_SWITCH)
 
     if not self.power_switch or not self.battery_switch then
         error("Failed to initialize power switches")
@@ -109,19 +109,19 @@ function Power:handlePowerFuseEvent(source)
 
         -- Update main grid indicator
         self.utils:setComponentColor(self.display.power.indicators.MAIN,
-            main_circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
+            main_circuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
             self.colors.EMIT.INDICATOR)
 
         -- Update factory indicator
         self.utils:setComponentColor(self.display.power.indicators.FACTORY,
-            factory_circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
+            factory_circuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
             self.colors.EMIT.INDICATOR)
     elseif source == self.battery_switch then
         -- Update battery indicators
         local battery_circuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
 
         self.utils:setComponentColor(self.display.power.indicators.BATTERY,
-            battery_circuit.isFuesed and self.colors.STATUS.OFF or self.colors.STATUS.WORKING,
+            battery_circuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
             self.colors.EMIT.INDICATOR)
     end
 end
@@ -157,22 +157,22 @@ function Power:updatePowerIndicators()
     local factory_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
 
     if main_circuit.isFuesed then
-        self.utils:setComponentColor(self.display.power.indicators.MAIN, self.colors.STATUS.OFF,
+        self.utils:setComponentColor(self.display.power.indicators.MAIN, self.colors.COLOR.RED,
             self.colors.EMIT.INDICATOR)
     else
-        self.utils:setComponentColor(self.display.power.indicators.MAIN, self.colors.STATUS.WORKING,
+        self.utils:setComponentColor(self.display.power.indicators.MAIN, self.colors.COLOR.GREEN,
             self.colors.EMIT.INDICATOR)
     end
 
     self.display.power.switches.MAIN.state = main_power_on
     self.utils:setComponentColor(self.display.power.indicators.MAIN_SWITCH,
-        main_power_on and self.colors.STATUS.WORKING or self.colors.STATUS.OFF, self.colors.EMIT.INDICATOR)
+        main_power_on and self.colors.COLOR.GREEN or self.colors.COLOR.RED, self.colors.EMIT.INDICATOR)
 
     if factory_circuit.isFuesed then
-        self.utils:setComponentColor(self.display.power.indicators.FACTORY, self.colors.STATUS.OFF,
+        self.utils:setComponentColor(self.display.power.indicators.FACTORY, self.colors.COLOR.RED,
             self.colors.EMIT.INDICATOR)
     else
-        self.utils:setComponentColor(self.display.power.indicators.FACTORY, self.colors.STATUS.WORKING,
+        self.utils:setComponentColor(self.display.power.indicators.FACTORY, self.colors.COLOR.GREEN,
             self.colors.EMIT.INDICATOR)
     end
 
@@ -181,13 +181,13 @@ function Power:updatePowerIndicators()
 
     self.display.power.switches.BATTERY.state = battery_power_on
     self.utils:setComponentColor(self.display.power.indicators.BATTERY_SWITCH,
-        battery_power_on and self.colors.STATUS.WORKING or self.colors.STATUS.OFF, self.colors.EMIT.INDICATOR)
+        battery_power_on and self.colors.COLOR.GREEN or self.colors.COLOR.RED, self.colors.EMIT.INDICATOR)
 
     if battery_circuit.isFuesed then
-        self.utils:setComponentColor(self.display.power.indicators.BATTERY, self.colors.STATUS.OFF,
+        self.utils:setComponentColor(self.display.power.indicators.BATTERY, self.colors.COLOR.RED,
             self.colors.EMIT.INDICATOR)
     else
-        self.utils:setComponentColor(self.display.power.indicators.BATTERY, self.colors.STATUS.WORKING,
+        self.utils:setComponentColor(self.display.power.indicators.BATTERY, self.colors.COLOR.GREEN,
             self.colors.EMIT.INDICATOR)
     end
 end
@@ -226,13 +226,13 @@ function Power:updatePowerDisplays()
         self.display.power.BATTERY.PERCENTAGE.percent = battery_circuit.batteryStore / maxCapacity
 
         if batteryPercent >= 75 then
-            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.STATUS.WORKING,
+            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.GREEN,
                 self.colors.EMIT.GAUGE)
         elseif batteryPercent >= 25 then
-            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.STATUS.WARNING,
+            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.YELLOW,
                 self.colors.EMIT.GAUGE)
         else
-            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.STATUS.OFF,
+            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.RED,
                 self.colors.EMIT.GAUGE)
         end
     else
@@ -241,30 +241,30 @@ function Power:updatePowerDisplays()
         self.display.power.BATTERY.PERCENTAGE.percent = batteryPercent / 100
 
         if batteryPercent >= 75 then
-            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.STATUS.WORKING,
+            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.GREEN,
                 self.colors.EMIT.GAUGE)
         elseif batteryPercent >= 25 then
-            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.STATUS.WARNING,
+            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.YELLOW,
                 self.colors.EMIT.GAUGE)
         else
-            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.STATUS.OFF,
+            self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.RED,
                 self.colors.EMIT.GAUGE)
         end
     end
 
     if battery_circuit.batteryTimeUntilFull > 0 then
-        self.utils:setComponentColor(self.display.power.BATTERY.CHARGING, self.colors.STATUS.WORKING,
+        self.utils:setComponentColor(self.display.power.BATTERY.CHARGING, self.colors.COLOR.GREEN,
             self.colors.EMIT.INDICATOR)
     else
-        self.utils:setComponentColor(self.display.power.BATTERY.CHARGING, self.colors.STATUS.WORKING,
+        self.utils:setComponentColor(self.display.power.BATTERY.CHARGING, self.colors.COLOR.GREEN,
             self.colors.EMIT.OFF)
     end
 
     if battery_circuit.batteryTimeUntilEmpty > 0 then
-        self.utils:setComponentColor(self.display.power.BATTERY.ON_BATTERIES, self.colors.STATUS.WORKING,
+        self.utils:setComponentColor(self.display.power.BATTERY.ON_BATTERIES, self.colors.COLOR.GREEN,
             self.colors.EMIT.INDICATOR)
     else
-        self.utils:setComponentColor(self.display.power.BATTERY.ON_BATTERIES, self.colors.STATUS.WORKING,
+        self.utils:setComponentColor(self.display.power.BATTERY.ON_BATTERIES, self.colors.COLOR.GREEN,
             self.colors.EMIT.OFF)
     end
 end
