@@ -3,7 +3,9 @@ local FACTORY_NAME = "heavy-oil"
 local internet = computer.getPCIDevices(classes.Build_InternetCard_C)[1]
 
 function downloadFromGithub(path)
-    local url = GITHUB_URL .. "/" .. path
+    -- Add timestamp to prevent caching
+    local timestamp = computer.time()
+    local url = GITHUB_URL .. "/" .. path .. "?t=" .. timestamp
     print("Trying to download: " .. url)
 
     local request = internet:request(url, "GET", "")
