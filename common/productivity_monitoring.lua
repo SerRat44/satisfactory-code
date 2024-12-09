@@ -28,15 +28,15 @@ function ProductivityMonitoring:new(dependencies)
     return instance
 end
 
-function ProductivityMonitoring:initialize(config)
+function ProductivityMonitoring:initialize()
     -- Initialize light switch
-    self.light_switch = component.proxy(config.POWER.LIGHT_SWITCH)
+    self.light_switch = component.proxy(self.config.POWER.LIGHT_SWITCH)
     if not self.light_switch then
         error("Light switch not found")
     end
 
     -- Initialize machines based on config
-    for i, id in ipairs(config.MACHINE_IDS) do
+    for i, id in ipairs(self.config.REFINERY_IDS) do
         self.machines[i] = component.proxy(id)
     end
 
