@@ -6,10 +6,10 @@ local FlowMonitoring = {
     networkCard = nil
 }
 
-function FlowMonitoring:new(display, dependencies)
+function FlowMonitoring:new(dependencies)
     local instance = {}
     setmetatable(instance, { __index = self })
-    instance.display = display
+    instance.display = dependencies.display
     instance.utils = dependencies.utils
     instance.colors = dependencies.colors
     instance.config = dependencies.config

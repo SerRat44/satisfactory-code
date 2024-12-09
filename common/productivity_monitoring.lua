@@ -10,10 +10,10 @@ local ProductivityMonitoring = {
     light_switch = nil
 }
 
-function ProductivityMonitoring:new(display, dependencies)
+function ProductivityMonitoring:new(dependencies)
     local instance = {}
     setmetatable(instance, { __index = self })
-    instance.display = display
+    instance.display = dependencies.display
     instance.colors = dependencies.colors
     instance.utils = dependencies.utils
     instance.config = dependencies.config
@@ -83,8 +83,8 @@ function ProductivityMonitoring:handleButtonPress(button_id)
     end
 end
 
-function ProductivityMonitoring:updateProductivityHistory()
-    local current_prod = self:getAvgProductivity()
+function ProductivityMonitoring:updateProductivityDisplay()
+    local current_prod = utils.getAvgProductivity()
 
     -- Update gauges and button colors
     for i, machine in ipairs(self.machines) do
@@ -108,24 +108,6 @@ function ProductivityMonitoring:updateProductivityHistory()
     end
 
     self:updateProductivityIndicator()
-    return current_prod
-end
-
-function ProductivityMonitoring:getAvgProductivity()
-    local total_productivity = 0
-    local active_machines = 0
-
-    for _, machine in ipairs(self.machines) do -- Changed from self.refineries
-        if machine and not machine.standby then
-            total_productivity = total_productivity + machine.productivity
-            active_machines = active_machines + 1
-        end
-    end
-
-    local current_prod = active_machines > 0 and (total_productivity / active_machines) or 0
-    table.insert(self.productivity_history, current_prod)
-    self.current_productivity = current_prod
-
     return current_prod
 end
 

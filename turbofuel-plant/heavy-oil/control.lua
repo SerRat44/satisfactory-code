@@ -3,13 +3,13 @@ return function(dependencies)
     local colors = dependencies.colors
     local utils = dependencies.utils
     local config = dependencies.config
-    local DisplayConstructor = dependencies.display
+    local Display = dependencies.display
     local Power = dependencies.power
     local FlowMonitoring = dependencies.flowMonitoring
     local ProductivityMonitoring = dependencies.productivityMonitoring
 
     -- Create the Display class
-    local Display = DisplayConstructor({ colors = colors, config = config })
+    local Display = Display({ colors = colors, config = config })
     if not Display then
         error("Failed to create Display class")
     end
@@ -90,9 +90,9 @@ return function(dependencies)
         }
 
         -- Create module instances
-        power = Power:new(modules, modulesDependencies)
-        flowMonitoring = FlowMonitoring:new(modules, modulesDependencies)
-        productivityMonitoring = ProductivityMonitoring:new(modules, modulesDependencies)
+        productivityMonitoring = ProductivityMonitoring:new(modulesDependencies)
+        flowMonitoring = FlowMonitoring:new(modulesDependencies)
+        power = Power:new(modulesDependencies)
 
         print("Initializing components...")
         -- Clear any existing event listeners before initializing

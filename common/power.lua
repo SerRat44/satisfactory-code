@@ -8,10 +8,10 @@ local Power = {
     networkCard = nil
 }
 
-function Power:new(display, dependencies)
+function Power:new(dependencies)
     local instance = {}
     setmetatable(instance, { __index = self })
-    instance.display = display
+    instance.display = dependencies.display
     instance.colors = dependencies.colors
     instance.utils = dependencies.utils
     instance.config = dependencies.config
