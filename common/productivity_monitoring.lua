@@ -30,7 +30,7 @@ end
 
 function ProductivityMonitoring:initialize(config)
     -- Initialize light switch
-    self.light_switch = component.proxy(config.COMPONENT_IDS.LIGHT_SWITCH)
+    self.light_switch = component.proxy(config.POWER.LIGHT_SWITCH)
     if not self.light_switch then
         error("Light switch not found")
     end
