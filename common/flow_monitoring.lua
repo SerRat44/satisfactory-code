@@ -40,7 +40,7 @@ function FlowMonitoring:updateFlowDisplays()
     -- Update flow gauges and displays for each type
     for type, valves in pairs(self.valves) do
         for i, valve in ipairs(valves) do
-            local flow = self.utils.getValveFlow(valve)
+            local flow = self.utils:getValveFlow(valve)
 
             -- Update gauge if it exists
             if self.display.flow.gauges[type] and self.display.flow.gauges[type][i] then
@@ -50,7 +50,7 @@ function FlowMonitoring:updateFlowDisplays()
 
             -- Update display if it exists
             if self.display.flow.displays[type] and self.display.flow.displays[type][i] then
-                self.display.flow.displays[type][i]:setText(self.utils.formatFlowDisplay(flow))
+                self.display.flow.displays[type][i]:setText(self.utils:formatFlowDisplay(flow))
             end
         end
 
@@ -63,23 +63,23 @@ function FlowMonitoring:updateFlowGaugeColor(gauge, flow)
     if not gauge then return end
 
     if flow >= 95 then
-        self.utils.setComponentColor(gauge, self.colors.STATUS.WORKING, self.colors.EMIT.GAUGE)
+        self.utils:setComponentColor(gauge, self.colors.STATUS.WORKING, self.colors.EMIT.GAUGE)
     elseif flow >= 50 then
-        self.utils.setComponentColor(gauge, self.colors.STATUS.IDLE, self.colors.EMIT.GAUGE)
+        self.utils:setComponentColor(gauge, self.colors.STATUS.IDLE, self.colors.EMIT.GAUGE)
     else
-        self.utils.setComponentColor(gauge, self.colors.STATUS.WARNING, self.colors.EMIT.GAUGE)
+        self.utils:setComponentColor(gauge, self.colors.STATUS.WARNING, self.colors.EMIT.GAUGE)
     end
 end
 
 function FlowMonitoring:updateTotalFlow(type)
     local total = 0
     for _, valve in ipairs(self.valves[type]) do
-        total = total + self.utils.getValveFlow(valve)
+        total = total + self.utils:getValveFlow(valve)
     end
 
     local displayKey = "total_" .. type .. "_" .. (type == "crude" and "in" or "out")
     if self.display.flow.displays[displayKey] then
-        self.display.flow.displays[displayKey]:setText(self.utils.formatFlowDisplay(total))
+        self.display.flow.displays[displayKey]:setText(self.utils:formatFlowDisplay(total))
     end
 end
 
@@ -88,7 +88,7 @@ function FlowMonitoring:broadcastFlowStatus()
     for type, valves in pairs(self.valves) do
         status[type] = {}
         for i, valve in ipairs(valves) do
-            status[type][i] = self.utils.getValveFlow(valve)
+            status[type][i] = self.utils:getValveFlow(valve)
         end
     end
 
