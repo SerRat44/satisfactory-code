@@ -80,19 +80,77 @@ return function(dependencies)
                 -- Initialize corresponding gauge (one unit above button)
                 local gauge = getModuleIfExists(self.panel, x, startY + 1, panelNum)
                 if gauge then
-                    gauge.limit = 1
                     self.modules.factory.gauges[buttonIndex] = gauge
                 end
             end
         end
     end
 
+    function Display:initializeValveFlowBlock(startX, startY, panelNum, type, count)
+        -- Ensure arrays exist for this type
+        self.modules.flow.gauges[type] = self.modules.flow.gauges[type] or {}
+        self.modules.flow.displays[type] = self.modules.flow.displays[type] or {}
+        self.modules.flow.knobs[type] = self.modules.flow.knobs[type] or {}
+
+        for i = 1, count do
+            -- Initialize gauge
+            local gauge = getModuleIfExists(self.panel, startX + (i - 1), startY, panelNum)
+            if gauge then
+                gauge.limit = 1
+                gauge.percent = 0
+                self.modules.flow.gauges[type][i] = gauge
+            end
+
+            -- Initialize display
+            local display = getModuleIfExists(self.panel, startX + (i - 1) + 2, startY + 1, panelNum)
+            if display then
+                display:setText("0.0 m³/s")
+                self.modules.flow.displays[type][i] = display
+            end
+
+            -- Initialize knob/potentiometer
+            local potentiometer = getModuleIfExists(self.panel, startX + (i - 1) + 2, startY, panelNum)
+            if potentiometer then
+                potentiometer.enabled = true
+                potentiometer.max = 600
+                potentiometer.min = 0
+                self.modules.flow.knobs[type][i] = potentiometer
+            end
+        end
+
+        -- Initialize total display if needed
+        if count > 1 then
+            local total_display = getModuleIfExists(self.panel, startX + 1, startY - 1, panelNum)
+            if total_display then
+                total_display:setText("0.0 m³/s")
+                self.modules.flow.displays["total_" .. type] =
+                    total_display
+            end
+        end
+    end
+
+    function Display:initializeItemFlowBlock(startX, startY, panelNum, type)
+        -- Initialize gauge
+        local gauge = getModuleIfExists(self.panel, startX, startY, panelNum)
+        if gauge then
+            gauge.limit = 1
+            self.modules.flow.gauges[type] = gauge
+        end
+
+        -- Initialize display
+        local display = getModuleIfExists(self.panel, startX + 2, startY + 1, panelNum)
+        if display then
+            display:setText("0.0 items/s")
+            self.modules.flow.displays["produced_" .. type] = display
+        end
+    end
+
     function Display:initializeFactoryModules()
         -- Initialize machine rows
-        self:initializeMachineRow(1, 2, 0, 10) -- First row
-        self:initializeMachineRow(1, 0, 0, 10) -- Second row
-        self:initializeMachineRow(1, 7, 0, 10) -- Third row
-        self:initializeMachineRow(1, 5, 0, 10) -- Fourth row
+        self:initializeMachineRow(1, 2, 0, 10)
+        self:initializeMachineRow(1, 0, 0, 10)
+        self:initializeMachineRow(1, 7, 0, 10)
+        self:initializeMachineRow(1, 5, 0, 10)
 
         -- Initialize other factory modules
         self.modules.factory.emergency_stop = self.panel:getModule(10, 10, 0)
@@ -101,31 +159,12 @@ return function(dependencies)
     end
 
     function Display:initializeFlowModules()
-        -- Initialize flow gauges
-        self.modules.flow.gauges.crude[1] = self.panel:getModule(0, 5, 1)
-        self.modules.flow.gauges.crude[2] = self.panel:getModule(0, 2, 1)
-        self.modules.flow.gauges.heavy[1] = self.panel:getModule(7, 8, 1)
-        self.modules.flow.gauges.heavy[2] = self.panel:getModule(7, 5, 1)
-        self.modules.flow.gauges.heavy[3] = self.panel:getModule(7, 2, 1)
+        -- Initialize solid flow displays (polymer)
+        self:initializeItemFlowBlock(4, 2, 1, "polymer")
 
-        -- Initialize flow displays
-        self.modules.flow.displays.crude[1] = self.panel:getModule(2, 6, 1)
-        self.modules.flow.displays.crude[2] = self.panel:getModule(2, 3, 1)
-        self.modules.flow.displays.heavy[1] = self.panel:getModule(9, 9, 1)
-        self.modules.flow.displays.heavy[2] = self.panel:getModule(9, 6, 1)
-        self.modules.flow.displays.heavy[3] = self.panel:getModule(9, 3, 1)
-
-        -- Initialize total displays
-        self.modules.flow.displays.total_crude_in = self.panel:getModule(1, 0, 1)
-        self.modules.flow.displays.total_heavy_out = self.panel:getModule(8, 0, 1)
-        self.modules.flow.displays.total_polymer = self.panel:getModule(5, 0, 1)
-
-        -- Initialize flow knobs
-        self.modules.flow.knobs.crude[1] = self.panel:getModule(2, 3, 1)
-        self.modules.flow.knobs.crude[2] = self.panel:getModule(2, 0, 1)
-        self.modules.flow.knobs.heavy[1] = self.panel:getModule(9, 6, 1)
-        self.modules.flow.knobs.heavy[2] = self.panel:getModule(9, 3, 1)
-        self.modules.flow.knobs.heavy[3] = self.panel:getModule(9, 0, 1)
+        -- Initialize liquid flow blocks
+        self:initializeValveFlowBlock(0, 5, 1, "crude", 2) -- Crude oil
+        self:initializeValveFlowBlock(7, 8, 1, "heavy", 3) -- Heavy oil
     end
 
     function Display:initializePowerModules()

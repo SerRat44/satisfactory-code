@@ -1,16 +1,15 @@
 -- common/colors.lua
 
 return {
-    STATUS = {
-        WORKING = { 0, 255, 0 },   -- Green
-        IDLE = { 255, 255, 0 },    -- Yellow
-        WARNING = { 255, 165, 0 }, -- Orange
-        OFF = { 255, 0, 0 }        -- Red
+    COLOR = {
+        GREEN = { 0, 255, 0 },
+        YELLOW = { 255, 255, 0 },
+        ORANGE = { 255, 165, 0 },
+        RED = { 255, 0, 0 }
     },
     EMIT = {
-        INDICATOR = 2,
-        BUTTON = 0.5,
-        GAUGE = 255,
+        INDICATOR = 4,
+        BUTTON = 1,
         OFF = 0
     }
 }

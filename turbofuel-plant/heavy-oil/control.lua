@@ -177,19 +177,15 @@ return function(dependencies)
             -- Regular updates with error handling
             local updateSuccess, updateError = pcall(function()
                 -- Update all monitoring systems
-                productivityMonitoring:updateProductivityHistory()
-                if config.VALVE_CONFIG then
-                    flowMonitoring:updateFlowDisplays()
-                end
+                productivityMonitoring:updateProductivityDisplays()
+                flowMonitoring:updateFlowDisplays()
                 power:updatePowerDisplays()
                 power:updatePowerIndicators()
 
                 -- Broadcast status if data collection is active
                 if dataCollectionActive then
                     productivityMonitoring:broadcastMachineStatus()
-                    if config.VALVE_CONFIG then
-                        flowMonitoring:broadcastFlowStatus()
-                    end
+                    flowMonitoring:broadcastFlowStatus()
                     power:broadcastPowerStatus()
                 end
             end)

@@ -43,7 +43,7 @@ function ProductivityMonitoring:initialize(config)
     -- Initialize emergency stop if it exists
     if self.display.factory and self.display.factory.emergency_stop then
         event.listen(self.display.factory.emergency_stop)
-        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.STATUS.OFF, self.colors.EMIT.OFF)
+        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.OFF)
     end
 end
 
@@ -56,14 +56,13 @@ function ProductivityMonitoring:handleEmergencyStop()
                 machine.standby = true
             end
         end
-        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.STATUS.OFF, self.colors.EMIT
-            .BUTTON)
-        self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.OFF,
+        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.BUTTON)
+        self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.COLOR.RED,
             self.colors.EMIT.INDICATOR)
         self.light_switch.colorSlot = 1
     else
         self.light_switch.colorSlot = 6
-        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.STATUS.OFF, self.colors.EMIT.OFF)
+        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.OFF)
         for _, machine in ipairs(self.machines) do
             if machine then
                 machine.standby = false
@@ -83,23 +82,28 @@ function ProductivityMonitoring:handleButtonPress(button_id)
     end
 end
 
-function ProductivityMonitoring:updateProductivityDisplay()
-    local current_prod = self.utils:getAvgProductivity()
+function ProductivityMonitoring:updateProductivityHistory()
+    self.current_productivity = self.utils:getAvgProductivity(self.machines)
+    table.insert(self.productivity_history, self.current_productivity)
 
-    -- Update gauges and button colors
+    -- Update gauges and button colors together
     for i, machine in ipairs(self.machines) do
+        -- Update gauge if it exists
         if self.display.factory.gauges[i] then
             if machine and not machine.standby then
                 local prod = machine.productivity
-                self.display.factory.gauges[i].limit = 1
-                self.display.factory.gauges[i].percent = prod
-                self:updateGaugeColor(self.display.factory.gauges[i], prod)
+                local gauge = self.display.factory.gauges[i]
+                gauge.limit = 1
+                gauge.percent = prod
+                self.utils:updateGaugeColor(gauge)
             else
                 self.display.factory.gauges[i].percent = 0
-                self.utils:setComponentColor(self.display.factory.gauges[i], self.colors.STATUS.OFF,
-                    self.colors.EMIT.GAUGE)
+                self.utils:setComponentColor(self.display.factory.gauges[i], self.colors.COLOR.RED,
+                    self.colors.EMIT.OFF)
             end
         end
+
+        -- Update button
         self:updateButtonColor(i)
     end
 
@@ -108,64 +112,46 @@ function ProductivityMonitoring:updateProductivityDisplay()
     end
 
     self:updateProductivityIndicator()
-    return current_prod
+    return self.current_productivity
 end
 
 function ProductivityMonitoring:updateProductivityIndicator()
     if self.emergency_state then
-        self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.OFF,
+        self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.COLOR.RED,
             self.colors.EMIT.INDICATOR)
     else
         if self.current_productivity >= 0.95 then
-            self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.WORKING,
+            self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.COLOR.GREEN,
                 self.colors.EMIT.INDICATOR)
         elseif self.current_productivity >= 0.5 then
-            self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.WARNING,
+            self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.COLOR.YELLOW,
                 self.colors.EMIT.INDICATOR)
         else
-            self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.STATUS.IDLE,
+            self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.COLOR.ORANGE,
                 self.colors.EMIT.INDICATOR)
         end
     end
 end
 
 function ProductivityMonitoring:updateButtonColor(index)
-    if self.display.factory.buttons[index] and self.machines[index] then -- Changed from self.refineries
-        local machine = self.machines[index]                             -- Changed from refinery
+    local button = self.display.factory.buttons[index]
+    local machine = self.machines[index]
 
-        -- First check if machine exists and is not in standby
+    if button and machine then
         if not machine or machine.standby then
-            self.utils:setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.OFF,
-                self.colors.EMIT.BUTTON)
+            self.utils:setComponentColor(button, self.colors.COLOR.RED, self.colors.EMIT.BUTTON)
             return
         end
 
-        -- Get productivity value
         local productivity = machine.productivity
 
-        -- Set color based on productivity thresholds
         if productivity >= 0.95 then
-            self.utils:setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.WORKING,
-                self.colors.EMIT.BUTTON)
+            self.utils:setComponentColor(button, self.colors.COLOR.GREEN, self.colors.EMIT.BUTTON)
         elseif productivity >= 0.5 then
-            self.utils:setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.IDLE,
-                self.colors.EMIT.BUTTON)
+            self.utils:setComponentColor(button, self.colors.COLOR.YELLOW, self.colors.EMIT.BUTTON)
         else
-            self.utils:setComponentColor(self.display.factory.buttons[index], self.colors.STATUS.WARNING,
-                self.colors.EMIT.BUTTON)
+            self.utils:setComponentColor(button, self.colors.COLOR.ORANGE, self.colors.EMIT.BUTTON)
         end
-    end
-end
-
-function ProductivityMonitoring:updateGaugeColor(gauge, percent)
-    if not gauge then return end
-
-    if percent >= 0.95 then
-        self.utils:setComponentColor(gauge, self.colors.STATUS.WORKING, self.colors.EMIT.GAUGE)
-    elseif percent >= 0.5 then
-        self.utils:setComponentColor(gauge, self.colors.STATUS.IDLE, self.colors.EMIT.GAUGE)
-    else
-        self.utils:setComponentColor(gauge, self.colors.STATUS.WARNING, self.colors.EMIT.GAUGE)
     end
 end
 
@@ -184,18 +170,18 @@ function ProductivityMonitoring:getMachineStatus(machine)
     if productivity >= 0.95 then
         return "WORKING"
     elseif productivity >= 0.50 then
-        return "WARNING"
-    else
         return "IDLE"
+    else
+        return "WARNING"
     end
 end
 
 function ProductivityMonitoring:broadcastMachineStatus()
     for i, machine in ipairs(self.machines) do
-        local status = self:getMachineStatus(machine)           -- Renamed from getRefineryStatus
+        local status = self:getMachineStatus(machine)
         if self.networkCard then
-            self.networkCard:broadcast(100, "machine_update", { -- Changed from refinery_update
-                "machine_" .. i,                                -- Changed from refinery_
+            self.networkCard:broadcast(100, "machine_update", {
+                "machine_" .. i,
                 status,
                 machine.productivity
             })

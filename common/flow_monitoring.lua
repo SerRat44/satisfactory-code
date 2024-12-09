@@ -40,17 +40,16 @@ function FlowMonitoring:updateFlowDisplays()
     -- Update flow gauges and displays for each type
     for type, valves in pairs(self.valves) do
         for i, valve in ipairs(valves) do
-            local flow = self.utils:getValveFlow(valve)
-
             -- Update gauge if it exists
             if self.display.flow.gauges[type] and self.display.flow.gauges[type][i] then
-                self.display.flow.gauges[type][i].percent = flow / 100
-                self:updateFlowGaugeColor(self.display.flow.gauges[type][i], flow)
+                self.display.flow.gauges[type][i].limit = valve.userFlowLimit
+                self.display.flow.gauges[type][i].percent = valve.flow
+                self.utils:updateGaugeColor(self.display.flow.gauges[type][i])
             end
 
             -- Update display if it exists
             if self.display.flow.displays[type] and self.display.flow.displays[type][i] then
-                self.display.flow.displays[type][i]:setText(self.utils:formatFlowDisplay(flow))
+                self.display.flow.displays[type][i]:setText(self.utils:formatFlowDisplay(valve.flow))
             end
         end
 
@@ -59,27 +58,24 @@ function FlowMonitoring:updateFlowDisplays()
     end
 end
 
-function FlowMonitoring:updateFlowGaugeColor(gauge, flow)
-    if not gauge then return end
+function FlowMonitoring:updateTotalFlow()
+    -- Update totals for all types
+    for type, valves in pairs(self.valves) do
+        local total = 0
+        for _, valve in ipairs(valves) do
+            total = total + (valve.flow or 0)
+        end
 
-    if flow >= 95 then
-        self.utils:setComponentColor(gauge, self.colors.STATUS.WORKING, self.colors.EMIT.GAUGE)
-    elseif flow >= 50 then
-        self.utils:setComponentColor(gauge, self.colors.STATUS.IDLE, self.colors.EMIT.GAUGE)
-    else
-        self.utils:setComponentColor(gauge, self.colors.STATUS.WARNING, self.colors.EMIT.GAUGE)
-    end
-end
-
-function FlowMonitoring:updateTotalFlow(type)
-    local total = 0
-    for _, valve in ipairs(self.valves[type]) do
-        total = total + self.utils:getValveFlow(valve)
-    end
-
-    local displayKey = "total_" .. type .. "_" .. (type == "crude" and "in" or "out")
-    if self.display.flow.displays[displayKey] then
-        self.display.flow.displays[displayKey]:setText(self.utils:formatFlowDisplay(total))
+        -- Find any display key that starts with "total_" and contains our type
+        for displayKey, display in pairs(self.display.flow.displays) do
+            if displayKey:match(type[1] .. "_" .. type[2]) then
+                if type[1] == "produced" then
+                    display:setText(string.format("%.1f/min", total))
+                elseif type[1] == "total" then
+                    display:setText(string.format("%.1f m³/s", total))
+                end
+            end
+        end
     end
 end
 
@@ -88,7 +84,7 @@ function FlowMonitoring:broadcastFlowStatus()
     for type, valves in pairs(self.valves) do
         status[type] = {}
         for i, valve in ipairs(valves) do
-            status[type][i] = self.utils:getValveFlow(valve)
+            status[type][i] = valve.flow
         end
     end
 

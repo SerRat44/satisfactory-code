@@ -1,12 +1,13 @@
 -- common/utils.lua
 
 local Utils = {
-    machines = nil
+    colors = nil
 }
 
-function Utils:new()
+function Utils:new(dependencies)
     local instance = {}
     setmetatable(instance, { __index = self })
+    instance.colors = dependencies.colors
     return instance
 end
 
@@ -19,14 +20,14 @@ function Utils:setComponentColor(component, color, emit)
     end
 end
 
-function Utils:formatFlowDisplay(flow)
+function Utils:formatValveFlowDisplay(flow)
     if flow == 0 then return "0" end
-    return tostring(math.floor(flow))
+    return tostring(math.floor(flow)) .. " m³/s"
 end
 
-function Utils:getValveFlow(valve)
-    if not valve then return 0 end
-    return valve.flow or 0
+function Utils:formatItemFlowDisplay(flow)
+    if flow == 0 then return "0" end
+    return tostring(math.floor(flow)) .. " m³/s"
 end
 
 function Utils:getAvgProductivity(machines)
@@ -42,6 +43,18 @@ function Utils:getAvgProductivity(machines)
 
     local current_prod = active_machines > 0 and (total_productivity / active_machines) or 0
     return current_prod
+end
+
+function Utils:updateGaugeColor(gauge)
+    if gauge.percent >= 0.95 then
+        self:setComponentColor(gauge, self.colors.COLOR.GREEN, self.colors.EMIT.OFF)
+    elseif gauge.percent >= 0.5 then
+        self:setComponentColor(gauge, self.colors.COLOR.YELLOW, self.colors.EMIT.OFF)
+    elseif gauge.percent > 0 then
+        self:setComponentColor(gauge, self.colors.COLOR.ORANGE, self.colors.EMIT.OFF)
+    else
+        self:setComponentColor(gauge, self.colors.COLOR.RED, self.colors.EMIT.OFF)
+    end
 end
 
 return Utils
