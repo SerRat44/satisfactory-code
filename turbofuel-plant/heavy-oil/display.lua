@@ -120,11 +120,15 @@ return function(dependencies)
 
         -- Initialize total display if needed
         if count > 1 then
-            local total_display = getModuleIfExists(self.panel, startX + 1, startY - 1, panelNum)
+            -- Position total display relative to the bottom-most gauge's position
+            -- +1x from start, -2y from startY
+            local totalDisplayX = startX + 1
+            local totalDisplayY = startY - 2
+
+            local total_display = getModuleIfExists(self.panel, totalDisplayX, totalDisplayY, panelNum)
             if total_display then
                 total_display:setText("0.0 m³/s")
-                self.modules.flow.displays["total_" .. type] =
-                    total_display
+                self.modules.flow.displays["total_" .. type] = total_display
             end
         end
     end
