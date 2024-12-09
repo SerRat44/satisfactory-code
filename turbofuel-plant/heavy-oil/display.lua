@@ -120,9 +120,7 @@ return function(dependencies)
 
         -- Initialize total display if needed
         if count > 1 then
-            -- Position total display relative to the bottom-most gauge's position
-            -- +1x from start, -2y from startY
-            local totalDisplayX = startX + 1
+            local totalDisplayX = startX + (i - 1) + 1
             local totalDisplayY = startY - 2
 
             local total_display = getModuleIfExists(self.panel, totalDisplayX, totalDisplayY, panelNum)
