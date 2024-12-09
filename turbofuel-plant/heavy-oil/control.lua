@@ -1,7 +1,7 @@
 -- turbofuel-plant/heavy-oil/control.lua
 return function(dependencies)
     local colors = dependencies.colors
-    local utils = dependencies.utils:new()
+    local utils = dependencies.utils:new(colors)
     local config = dependencies.config
     local Display = dependencies.display
     local Power = dependencies.power
@@ -80,6 +80,10 @@ return function(dependencies)
         if not networkCard then
             error("Network card not found!")
         end
+
+        local baseDependencies = {
+            colors = colors,
+        }
 
         -- Create module instances with correct dependencies
         local modulesDependencies = {
