@@ -105,12 +105,8 @@ return function(dependencies)
         -- Initialize all modules
         power:initialize()
 
-        -- Only initialize flow monitoring if valve config exists
-        if config.VALVE_CONFIG then
-            flowMonitoring:initialize(config.VALVE_CONFIG)
-        else
-            print("Warning: No valve configuration found, skipping flow monitoring initialization")
-        end
+
+        flowMonitoring:initialize()
 
         -- Initialize productivity monitoring with machine IDs
         local monitoringConfig = {

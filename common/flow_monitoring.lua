@@ -23,9 +23,9 @@ function FlowMonitoring:new(dependencies)
     return instance
 end
 
-function FlowMonitoring:initialize(valveConfig)
+function FlowMonitoring:initialize()
     -- Initialize valves based on config
-    for type, valveIds in pairs(valveConfig) do
+    for type, valveIds in pairs(self.config.VALVES) do
         self.valves[type] = {}
         for i, id in ipairs(valveIds) do
             self.valves[type][i] = component.proxy(id)
