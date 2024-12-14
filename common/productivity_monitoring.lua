@@ -212,6 +212,19 @@ function ProductivityMonitoring:updateAllButtons()
     end
 end
 
+function ProductivityMonitoring:broadcastMachineStatus()
+    for i, machine in ipairs(self.machines) do
+        local status = self:getMachineStatus(machine)
+        if self.networkCard then
+            self.networkCard:broadcast(100, "machine_update", {
+                "machine_" .. i,
+                status,
+                machine.productivity
+            })
+        end
+    end
+end
+
 function ProductivityMonitoring:update()
     self:updateDisplays()
 end
