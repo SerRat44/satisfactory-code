@@ -45,4 +45,17 @@ function Utils:getAvgProductivity(machines)
     return current_prod
 end
 
+function Utils:updateGaugeColor(gauge)
+    local percent = gauge.percent / gauge.limit
+    if percent >= 0.95 then
+        self:setComponentColor(gauge, self.colors.COLOR.GREEN, self.colors.EMIT.OFF)
+    elseif percent >= 0.5 then
+        self:setComponentColor(gauge, self.colors.COLOR.YELLOW, self.colors.EMIT.OFF)
+    elseif percent > 0 then
+        self:setComponentColor(gauge, self.colors.COLOR.ORANGE, self.colors.EMIT.OFF)
+    else
+        self:setComponentColor(gauge, self.colors.COLOR.RED, self.colors.EMIT.OFF)
+    end
+end
+
 return Utils

@@ -90,7 +90,6 @@ return function(dependencies)
         -- Ensure arrays exist for this type
         self.modules.flow.gauges[type] = self.modules.flow.gauges[type] or {}
         self.modules.flow.displays[type] = self.modules.flow.displays[type] or {}
-        self.modules.flow.knobs[type] = self.modules.flow.knobs[type] or {}
 
         local y = startY
         for i = 0, count do
@@ -105,7 +104,7 @@ return function(dependencies)
             -- Initialize display
             local display = getModuleIfExists(self.panel, startX + 2, y + 1, panelNum)
             if display then
-                display:setText("0.0 m³/s")
+                display:setText("0.0 m³/min")
                 self.modules.flow.displays[type][i] = display
             end
 
@@ -119,7 +118,7 @@ return function(dependencies)
 
             local total_display = getModuleIfExists(self.panel, totalDisplayX, totalDisplayY, panelNum)
             if total_display then
-                total_display:setText("0.0 m³/s")
+                total_display:setText("0.0 m³/min")
                 self.modules.flow.displays["total_" .. type] = total_display
             end
         end
@@ -130,13 +129,15 @@ return function(dependencies)
         local gauge = getModuleIfExists(self.panel, startX, startY, panelNum)
         if gauge then
             gauge.limit = 1
+            gauge.percent = 0
+            updateGaugeColor(gauge)
             self.modules.flow.gauges[type] = gauge
         end
 
         -- Initialize display
         local display = getModuleIfExists(self.panel, startX + 2, startY + 1, panelNum)
         if display then
-            display:setText("0.0 items/s")
+            display:setText("0.0 items/min")
             self.modules.flow.displays["produced_" .. type] = display
         end
     end
