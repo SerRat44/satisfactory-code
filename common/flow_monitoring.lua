@@ -67,19 +67,17 @@ function FlowMonitoring:updateValveFlowDisplays()
 end
 
 function FlowMonitoring:updateItemFlowDisplays()
-    for itemType, gauge in pairs(self.display.flow.gauges) do
-        if type(gauge) ~= "table" then
-            local maxFlow = 780
-            local currentFlow = 0
+    for type, gauge in pairs(self.display.flow.gauges) do
+        local maxFlow = 780
+        local currentFlow = 0
 
-            gauge.limit = maxFlow
-            gauge.percent = currentFlow / maxFlow
-            self.utils:updateGaugeColor(gauge)
+        gauge.limit = maxFlow
+        gauge.percent = currentFlow / maxFlow
+        self.utils:updateGaugeColor(gauge)
 
-            -- Update corresponding display if it exists
-            if self.display.flow.displays[itemType] then
-                self.display.flow.displays[itemType]:setText(self.utils:formatItemFlowDisplay(currentFlow))
-            end
+        -- Update corresponding display if it exists
+        if self.display.flow.displays[type] then
+            self.display.flow.displays[type]:setText(self.utils:formatItemFlowDisplay(currentFlow))
         end
     end
 end
