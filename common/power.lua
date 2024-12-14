@@ -297,6 +297,13 @@ function Power:broadcastPowerStatus()
     end
 end
 
+function Power:update()
+    while true do
+        self:updatePowerDisplays()
+        self:broadcastPowerStatus()
+    end
+end
+
 function Power:handleNetworkMessage(type, data)
     if type == "grid" then
         if data then

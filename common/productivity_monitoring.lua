@@ -189,6 +189,11 @@ function ProductivityMonitoring:broadcastMachineStatus()
     end
 end
 
+function ProductivityMonitoring:update()
+    self:updateProductivityHistory()
+    self:broadcastMachineStatus()
+end
+
 function ProductivityMonitoring:cleanup()
     if self.display and self.display.factory and self.display.factory.emergency_stop then
         event.clear(self.display.factory.emergency_stop)

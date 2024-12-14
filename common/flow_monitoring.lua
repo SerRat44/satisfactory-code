@@ -70,13 +70,18 @@ function FlowMonitoring:updateTotalFlow()
         for displayKey, display in pairs(self.display.flow.displays) do
             if displayKey:match(type[1] .. "_" .. type[2]) then
                 if type[1] == "produced" then
-                    display:setText(string.format("%.1f/min", total))
+                    display:setText(string.format("%.2f/min", total))
                 elseif type[1] == "total" then
-                    display:setText(string.format("%.1f m³/s", total))
+                    display:setText(string.format("%.2f m³/s", total))
                 end
             end
         end
     end
+end
+
+function FlowMonitoring:update()
+    self:updateFlowDisplays()
+    self:broadcastFlowStatus()
 end
 
 function FlowMonitoring:broadcastFlowStatus()

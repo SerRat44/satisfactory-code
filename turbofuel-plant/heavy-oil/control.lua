@@ -181,10 +181,9 @@ return function(dependencies)
             -- Regular updates with error handling
             local updateSuccess, updateError = pcall(function()
                 -- Update all monitoring systems
-                productivityMonitoring:updateProductivityDisplays()
-                flowMonitoring:updateFlowDisplays()
-                power:updatePowerDisplays()
-                power:updatePowerIndicators()
+                productivityMonitoring:update()
+                flowMonitoring:update()
+                power:update()
 
                 -- Broadcast status if data collection is active
                 if dataCollectionActive then
