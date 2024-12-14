@@ -65,41 +65,6 @@ return function(dependencies)
         end
     end
 
-    local function setupEventListeners()
-        print("Setting up event listeners...")
-        event.clear()
-
-        -- Listen to network card
-        if networkCard then
-            networkCard:open(101)
-            event.listen(networkCard)
-        end
-
-        -- Listen to emergency stop
-        if modules.factory.emergency_stop then
-            event.listen(modules.factory.emergency_stop)
-            print("Emergency stop listener set up")
-        end
-
-        -- Listen to factory buttons
-        for i, button in ipairs(modules.factory.buttons) do
-            if button then
-                event.listen(button)
-                print("Button", i, "listener set up")
-            end
-        end
-
-        -- Listen to power switches
-        if modules.power and modules.power.switches then
-            for name, switch in pairs(modules.power.switches) do
-                if switch then
-                    event.listen(switch)
-                    print("Power switch", name, "listener set up")
-                end
-            end
-        end
-    end
-
     controlModule.main = function()
         print("Initializing modules...")
 
@@ -146,9 +111,6 @@ return function(dependencies)
         flowMonitoring:initialize()
         productivityMonitoring:initialize()
 
-        -- Set up event listeners
-        setupEventListeners()
-
         print("Starting main control loop...")
         while running do
             -- Process any pending events
@@ -157,21 +119,16 @@ return function(dependencies)
                 processEvent(eventData)
             end
 
-            -- Regular updates every second
-            updateTimer = updateTimer + 0.1
-            if updateTimer >= 1.0 then
-                if power then power:update() end
-                if flowMonitoring then flowMonitoring:update() end
-                if productivityMonitoring then productivityMonitoring:update() end
 
-                -- Broadcast status if data collection is active
-                if dataCollectionActive then
-                    if productivityMonitoring then productivityMonitoring:broadcastMachineStatus() end
-                    if flowMonitoring then flowMonitoring:broadcastFlowStatus() end
-                    if power then power:broadcastPowerStatus() end
-                end
+            if power then power:update() end
+            if flowMonitoring then flowMonitoring:update() end
+            if productivityMonitoring then productivityMonitoring:update() end
 
-                updateTimer = 0
+            -- Broadcast status if data collection is active
+            if dataCollectionActive then
+                if productivityMonitoring then productivityMonitoring:broadcastMachineStatus() end
+                if flowMonitoring then flowMonitoring:broadcastFlowStatus() end
+                if power then power:broadcastPowerStatus() end
             end
         end
 

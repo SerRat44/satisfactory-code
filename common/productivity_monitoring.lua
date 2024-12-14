@@ -136,7 +136,14 @@ function ProductivityMonitoring:updateDisplays()
             if machine and not machine.standby then
                 local prod = machine.productivity or 0
                 gauge.percent = prod
-                self.utils:updateGaugeColor(gauge)
+
+                if prod >= 0.95 then
+                    self.utils:setComponentColor(gauge, self.colors.COLOR.GREEN, self.colors.EMIT.OFF)
+                elseif prod >= 0.5 then
+                    self.utils:setComponentColor(gauge, self.colors.COLOR.YELLOW, self.colors.EMIT.OFF)
+                else
+                    self.utils:setComponentColor(gauge, self.colors.COLOR.ORANGE, self.colors.EMIT.OFF)
+                end
             else
                 gauge.percent = 0
                 self.utils:setComponentColor(gauge, self.colors.COLOR.RED, self.colors.EMIT.OFF)
