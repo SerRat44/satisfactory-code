@@ -60,20 +60,26 @@ function Power:initialize()
     local powerIO = self.display.power.switches.MAIN
     local batteryIO = self.display.power.switches.BATTERY
 
+    -- Get the connectors
+    local mainGridConnector = self.power_switch:getPowerConnectors()[2]
+    local factoryConnector = self.power_switch:getPowerConnectors()[1]
+    local batteryConnector = self.battery_switch:getPowerConnectors()[1]
+
+    -- Set up event listening for power fuses
+    event.listen(mainGridConnector)
+    event.listen(factoryConnector)
+    event.listen(batteryConnector)
+
     -- Set initial states for switches
     if powerIO then
         self.power_switch:setIsSwitchOn(powerIO.state)
         event.listen(powerIO)
     end
+
     if batteryIO then
         self.battery_switch:setIsSwitchOn(batteryIO.state)
         event.listen(batteryIO)
     end
-
-    -- Set up event listening for power fuses
-    event.listen(self.power_switch:getPowerConnectors()[1])   -- Factory circuit
-    event.listen(self.power_switch:getPowerConnectors()[2])   -- Main grid circuit
-    event.listen(self.battery_switch:getPowerConnectors()[1]) -- Battery circuit
 
     -- Update initial power indicators
     self:updatePowerIndicators()
