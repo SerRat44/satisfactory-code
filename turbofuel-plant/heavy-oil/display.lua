@@ -174,15 +174,17 @@ return function(dependencies)
 
     function Display:initializePowerModules()
         -- Initialize power switches
-        self.modules.power.switches.MAIN = self.panel:getModule(3, 0, 2)
-        self.modules.power.switches.BATTERY = self.panel:getModule(7, 0, 2)
+        self.modules.power.switches.MAIN = self.panel:getModule(2, 0, 2)
+        self.modules.power.switches.BATTERY = self.panel:getModule(6, 0, 2)
+
+        self.modules.power.switches.REMOTE_CONTROL = self.panel:getModule(10, 0, 2)
 
         -- Initialize power indicators
-        self.modules.power.indicators.MAIN = self.panel:getModule(1, 1, 2)
-        self.modules.power.indicators.MAIN_SWITCH = self.panel:getModule(3, 1, 2)
-        self.modules.power.indicators.FACTORY = self.panel:getModule(5, 1, 2)
-        self.modules.power.indicators.BATTERY_SWITCH = self.panel:getModule(7, 1, 2)
-        self.modules.power.indicators.BATTERY = self.panel:getModule(9, 1, 2)
+        self.modules.power.indicators.MAIN = self.panel:getModule(0, 1, 2)
+        self.modules.power.indicators.MAIN_SWITCH = self.panel:getModule(2, 1, 2)
+        self.modules.power.indicators.FACTORY = self.panel:getModule(4, 1, 2)
+        self.modules.power.indicators.BATTERY_SWITCH = self.panel:getModule(6, 1, 2)
+        self.modules.power.indicators.BATTERY = self.panel:getModule(8, 1, 2)
 
         -- Initialize battery displays
         self.modules.power.BATTERY.REMAINING_TIME = self.panel:getModule(9, 3, 2)
@@ -192,9 +194,9 @@ return function(dependencies)
         self.modules.power.BATTERY.MWH = self.panel:getModule(7, 6, 2)
 
         -- Initialize power displays
-        self.modules.power.POWER_DISPLAYS.MAIN_PRODUCED = self.panel:getModule(1, 3, 2)
-        self.modules.power.POWER_DISPLAYS.MAIN_USED = self.panel:getModule(2, 3, 2)
-        self.modules.power.POWER_DISPLAYS.FACTORY_USED = self.panel:getModule(5, 3, 2)
+        self.modules.power.POWER_DISPLAYS.MAIN_PRODUCED = self.panel:getModule(0, 3, 2)
+        self.modules.power.POWER_DISPLAYS.MAIN_USED = self.panel:getModule(1, 3, 2)
+        self.modules.power.POWER_DISPLAYS.FACTORY_USED = self.panel:getModule(4, 3, 2)
     end
 
     function Display:new(display_panel)

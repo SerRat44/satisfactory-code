@@ -57,16 +57,17 @@ function Power:initialize()
         error("Failed to initialize power switches")
     end
 
+    local powerIO = self.display.power.switches.MAIN
+    local batteryIO = self.display.power.switches.BATTERY
+
     -- Set initial states for switches
-    if self.display and self.display.power and self.display.power.switches then
-        if self.display.power.switches.MAIN then
-            self.power_switch:setIsSwitchOn(self.display.power.switches.MAIN.state)
-            event.listen(self.display.power.switches.MAIN)
-        end
-        if self.display.power.switches.BATTERY then
-            self.battery_switch.setIsSwitchOn(self.display.power.switches.BATTERY.state)
-            event.listen(self.display.power.switches.BATTERY)
-        end
+    if powerIO then
+        self.power_switch:setIsSwitchOn(powerIO.state)
+        event.listen(powerIO)
+    end
+    if batteryIO then
+        self.battery_switch:setIsSwitchOn(batteryIO.state)
+        event.listen(batteryIO)
     end
 
     -- Set up event listening for power fuses
