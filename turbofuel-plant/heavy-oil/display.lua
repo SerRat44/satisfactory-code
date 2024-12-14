@@ -1,7 +1,4 @@
-return function(dependencies)
-    local colors = dependencies.colors
-    local config = dependencies.config
-
+return function()
     local Display = {
         panel = nil,
         modules = {
@@ -42,69 +39,31 @@ return function(dependencies)
         end
     end
 
-    function Display:initializeValveFlowBlock(startX, startY, panelNum, type, count)
-        -- Create tables if they don't exist
-        self.modules.flow.liquids.gauges = self.modules.flow.liquids.gauges or {}
-        self.modules.flow.liquids.displays = self.modules.flow.liquids.displays or {}
-
-        self.modules.flow.liquids.gauges[type] = self.modules.flow.liquids.gauges[type] or {}
-        self.modules.flow.liquids.displays[type] = self.modules.flow.liquids.displays[type] or {}
-
-        local y = startY
-        local x = startX
-        for i = 0, count do
-            -- Initialize gauge
-            local gauge = getModuleIfExists(self.panel, x, y, panelNum)
-            if gauge then
-                self.modules.flow.liquids.gauges[type][i] = gauge
-            end
-
-            -- Initialize display
-            local display = getModuleIfExists(self.panel, x + 2, y + 1, panelNum)
-            if display then
-                self.modules.flow.liquids.displays[type][i] = display
-            end
-            y = y - 3
-            if i == 2 then
-                x = x + 4
-                y = startY
-            end
-        end
-
-        local totalDisplayX, totalDisplayY
-        if count > 3 then
-            totalDisplayX = startX + 3
-            totalDisplayY = startY - 8
-        elseif count > 1 then
-            totalDisplayX = startX + 1
-            totalDisplayY = y + 1
-        end
-
-        local total_display = getModuleIfExists(self.panel, totalDisplayX, totalDisplayY, panelNum)
-        if total_display then
-            self.modules.flow.liquids.displays["total_" .. type] = total_display
-        end
-    end
-
-    function Display:initializeItemFlowBlock(startX, startY, panelNum, type)
-        -- Create tables if they don't exist
-        self.modules.flow.items.gauges = self.modules.flow.items.gauges or {}
-        self.modules.flow.items.displays = self.modules.flow.items.displays or {}
-
+    function Display:initializeFlowBlock(startX, startY, panelNum, type)
         -- Initialize gauge
         local gauge = getModuleIfExists(self.panel, startX, startY, panelNum)
         if gauge then
-            self.modules.flow.items.gauges[type] = gauge
+            self.modules.flow.gauges[type] = gauge
         end
 
-        -- Initialize display
-        local display = getModuleIfExists(self.panel, startX + 2, startY + 1, panelNum)
-        if display then
-            self.modules.flow.items.displays[type] = display
+        -- Initialize displays
+        local display1 = getModuleIfExists(self.panel, startX + 2, startY + 1, panelNum)
+        if display1 then
+            self.modules.flow.displays[type] = display1
+        end
+
+        local display2 = getModuleIfExists(self.panel, startX + 2, startY, panelNum)
+        if display2 then
+            self.modules.flow.displays[type] = display2
         end
     end
 
-    function Display:initializeFactoryModules()
+    function Display:initializeProdModules()
+        -- Create necessary tables
+        self.modules.prod.indicators = self.modules.prod.indicators or {}
+        self.modules.flow.items.gauges = self.modules.flow.items.gauges or {}
+        self.modules.flow.items.displays = self.modules.flow.items.displays or {}
+
         -- Initialize machine rows
         self:initializeMachineRow(1, 2, 0, 10)
         self:initializeMachineRow(1, 0, 0, 10)
@@ -112,25 +71,22 @@ return function(dependencies)
         self:initializeMachineRow(1, 5, 0, 10)
 
         -- Initialize other factory modules
-        self.modules.prod.emergency_stop = self.panel:getModule(10, 10, 0)
-        self.modules.prod.avg_productivity_indicator = self.panel:getModule(2, 10, 0)
+        self.modules.prod.buttons.emergency_stop = self.panel:getModule(10, 10, 0)
+        self.modules.prod.indicators.avg_productivity = self.panel:getModule(2, 10, 0)
     end
 
     function Display:initializeFlowModules()
-        -- Initialize solid flow displays (polymer)
-        self:initializeItemFlowBlock(4, 2, 1, "polymer")
-
-        -- Initialize liquid flow blocks
-        self:initializeValveFlowBlock(0, 5, 1, "crude", 2) -- Crude oil
-        self:initializeValveFlowBlock(7, 8, 1, "heavy", 3) -- Heavy oil
+        self:initializeFlowBlock(0, 0, 1)
+        self:initializeFlowBlock(7, 3, 1)
+        self:initializeFlowBlock(7, 0, 1)
     end
 
     function Display:initializePowerModules()
         -- Create necessary tables
-        self.modules.power.switches = {}
-        self.modules.power.indicators = {}
-        self.modules.power.BATTERY = {}
-        self.modules.power.POWER_DISPLAYS = {}
+        self.modules.power.switches = self.modules.power.switches or {}
+        self.modules.power.indicators = self.modules.power.indicators or {}
+        self.modules.power.BATTERY = self.modules.power.BATTERY or {}
+        self.modules.power.POWER_DISPLAYS = self.modules.power.POWER_DISPLAYS or {}
 
         -- Initialize power switches
         self.modules.power.switches.MAIN = self.panel:getModule(2, 0, 2)
@@ -160,15 +116,6 @@ return function(dependencies)
     function Display:new(display_panel)
         if not display_panel then
             error("Display panel is required")
-        end
-
-        -- Test the panel immediately
-        local success = pcall(function()
-            local test_module = display_panel:getModule(0, 0, 0)
-        end)
-
-        if not success then
-            error("Display panel does not support getModule method")
         end
 
         local instance = {}
