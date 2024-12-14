@@ -92,6 +92,7 @@ function ProductivityMonitoring:handleButtonPress(button_id)
         machine.standby = not machine.standby
         self:updateButton(button_id)
         self:updateGauge(button_id)
+        self:updateProdIndicator()
     end
 end
 
@@ -222,19 +223,8 @@ function ProductivityMonitoring:handleIOTriggerEvent(source)
     end
 end
 
-function ProductivityMonitoring:processEvents()
-    local eventData = { event.pull() }
-    local eventType = eventData[1]
-    local source = eventData[2]
-
-    if eventType == "Trigger" then
-        self:handleIOTriggerEvent(source)
-    end
-end
-
 function ProductivityMonitoring:update()
     self:updateAllDisplays()
-    self:processEvents()
     self:broadcastMachineStatus()
 end
 

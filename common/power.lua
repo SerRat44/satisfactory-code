@@ -296,22 +296,9 @@ function Power:broadcastPowerStatus()
     end
 end
 
-function Power:processEvents()
-    local eventData = { event.pull() }
-    local eventType = eventData[1]
-    local source = eventData[2]
-
-    if eventType == "PowerFuseChanged" then
-        self:handlePowerFuseEvent(source)
-    elseif eventType == "StateChanged" then
-        self:handleIOSwitchEvent(source)
-    end
-end
-
 function Power:update()
     self:updatePowerDisplays()
     self:updateIOColors()
-    self:processEvents()
     self:broadcastPowerStatus()
 end
 
