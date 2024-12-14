@@ -38,17 +38,16 @@ function FlowMonitoring:initialize()
 end
 
 function FlowMonitoring:updateValveFlowDisplays()
-    -- Track totals during the main loop
     local totals = {}
 
     for type, valves in pairs(self.valves) do
         totals[type] = 0
 
         for i, valve in ipairs(valves) do
-            local displayIndex = i - 1
+            -- Change this line from i - 1 to just i
+            local displayIndex = i
             totals[type] = totals[type] + (valve.flow or 0)
 
-            -- Update gauge and display if they exist
             if self.display.flow.gauges[type] and self.display.flow.gauges[type][displayIndex] then
                 local gauge = self.display.flow.gauges[type][displayIndex]
                 gauge.limit = valve.userFlowLimit
@@ -61,7 +60,6 @@ function FlowMonitoring:updateValveFlowDisplays()
             end
         end
 
-        -- Update total display
         if self.display.flow.displays["total_" .. type] then
             self.display.flow.displays["total_" .. type]:setText(self.utils:formatValveFlowDisplay(totals[type]))
         end
