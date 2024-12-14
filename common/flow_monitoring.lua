@@ -38,7 +38,7 @@ function FlowMonitoring:initialize()
     end
 end
 
-function FlowMonitoring:updateFlowDisplays()
+function FlowMonitoring:updateValveFlowDisplays()
     -- Track totals during the main loop
     local totals = {}
 
@@ -69,8 +69,13 @@ function FlowMonitoring:updateFlowDisplays()
     end
 end
 
+function FlowMonitoring:updateItemFlowDisplays()
+
+end
+
 function FlowMonitoring:update()
-    self:updateFlowDisplays()
+    self:updateValveFlowDisplays()
+    self:updateItemFlowDisplays()
 end
 
 function FlowMonitoring:broadcastFlowStatus()
@@ -85,10 +90,6 @@ function FlowMonitoring:broadcastFlowStatus()
     if self.networkCard then
         self.networkCard:broadcast(100, "flow_update", status)
     end
-end
-
-function FlowMonitoring:cleanup()
-    -- Cleanup code if needed
 end
 
 return FlowMonitoring

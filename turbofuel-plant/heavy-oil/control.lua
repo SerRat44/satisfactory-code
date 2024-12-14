@@ -15,7 +15,6 @@ return function(dependencies)
     end
 
     -- Local variables for module state
-    local dataCollectionActive = true
     local running = true
     local display, power, flowMonitoring, productivityMonitoring, modules, networkCard
 
@@ -114,31 +113,11 @@ return function(dependencies)
         event.listen(networkCard)
 
         print("Starting main control loop...")
-        while running do
-            -- Process any pending events
-            local eventData = { event.pull() }
-            if eventData[1] then
-                processEvent(eventData)
-            end
-
-            -- Regular updates
+        while true do
             if power then power:update() end
             if flowMonitoring then flowMonitoring:update() end
             if productivityMonitoring then productivityMonitoring:update() end
-
-            -- Broadcast status if data collection is active
-            if dataCollectionActive then
-                if productivityMonitoring then productivityMonitoring:broadcastMachineStatus() end
-                if flowMonitoring then flowMonitoring:broadcastFlowStatus() end
-                if power then power:broadcastPowerStatus() end
-            end
         end
-
-        -- Cleanup on exit
-        if power then power:cleanup() end
-        if flowMonitoring then flowMonitoring:cleanup() end
-        if productivityMonitoring then productivityMonitoring:cleanup() end
-        event.clear()
     end
 
     return controlModule

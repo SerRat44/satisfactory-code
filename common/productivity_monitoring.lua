@@ -224,22 +224,33 @@ function ProductivityMonitoring:broadcastMachineStatus()
     end
 end
 
-function ProductivityMonitoring:update()
-    self:updateDisplays()
-end
+function ProductivityMonitoring:processEvents()
+    local eventData = { event.pull() }
+    local eventType = eventData[1]
+    local source = eventData[2]
 
-function ProductivityMonitoring:cleanup()
-    if self.display and self.display.factory then
-        for _, button in ipairs(self.display.factory.buttons) do
-            if button then
-                event.clear(button)
+    if eventType == "Trigger" then
+        -- Check emergency stop
+        if source == modules.factory.emergency_stop then
+            print("Emergency stop triggered")
+            productivityMonitoring:handleEmergencyStop()
+            return
+        end
+
+        -- Check factory buttons
+        for i, button in ipairs(modules.factory.buttons) do
+            if source == button then
+                print("Factory button pressed:", i)
+                productivityMonitoring:handleButtonPress(i)
+                return
             end
         end
-
-        if self.display.factory.emergency_stop then
-            event.clear(self.display.factory.emergency_stop)
-        end
     end
+end
+
+function ProductivityMonitoring:update()
+    self:updateDisplays()
+    self:processEvents()
 end
 
 return ProductivityMonitoring

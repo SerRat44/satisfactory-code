@@ -25,29 +25,7 @@ function Power:new(dependencies)
     return instance
 end
 
-function Power:cleanup()
-    -- Remove all event listeners
-    if self.display and self.display.power and self.display.power.switches then
-        if self.display.power.switches.MAIN then
-            event.clear(self.display.power.switches.MAIN)
-        end
-        if self.display.power.switches.BATTERY then
-            event.clear(self.display.power.switches.BATTERY)
-        end
-    end
-
-    if self.power_switch then
-        event.clear(self.power_switch)
-    end
-    if self.battery_switch then
-        event.clear(self.battery_switch)
-    end
-end
-
 function Power:initialize()
-    -- Cleanup any existing event listeners first
-    self:cleanup()
-
     -- Initialize switches
     self.power_switch = component.proxy(self.config.POWER.POWER_SWITCH)
     self.battery_switch = component.proxy(self.config.POWER.BATTERY_SWITCH)
@@ -56,9 +34,6 @@ function Power:initialize()
     if not self.power_switch or not self.battery_switch then
         error("Failed to initialize power switches")
     end
-
-    local powerIO = self.display.power.switches.MAIN
-    local batteryIO = self.display.power.switches.BATTERY
 
     -- Get the connectors
     local mainGridConnector = self.power_switch:getPowerConnectors()[2]
@@ -70,7 +45,10 @@ function Power:initialize()
     event.listen(factoryConnector)
     event.listen(batteryConnector)
 
-    -- Set initial states for switches
+    -- Set initial states for switches and listen for events
+    local powerIO = self.display.power.switches.MAIN
+    local batteryIO = self.display.power.switches.BATTERY
+
     if powerIO then
         self.power_switch:setIsSwitchOn(powerIO.state)
         event.listen(powerIO)
@@ -283,8 +261,21 @@ function Power:broadcastPowerStatus()
     end
 end
 
+function Power:processEvents()
+    local eventData = { event.pull() }
+    local eventType = eventData[1]
+    local source = eventData[2]
+
+    if eventType == "PowerFuseChanged" then
+        self:handlePowerFuseEvent(source)
+    elseif eventType == "StateChanged" then
+        self:handleSwitchEvent(source)
+    end
+end
+
 function Power:update()
     self:updatePowerDisplays()
+    self:processEvents()
 end
 
 function Power:handleNetworkMessage(type, data)
