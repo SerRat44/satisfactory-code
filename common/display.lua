@@ -1,6 +1,5 @@
 return function()
     local Display = {
-        panel = nil,
         modules = {
             prod = {},
             power = {},
@@ -16,7 +15,7 @@ return function()
         return success and module or nil
     end
 
-    function Display:initializeMachineRow(startX, startY, panelNum, count)
+    function Display:initializeMachineRow(panel, startX, startY, panelNum, count)
         -- Create arrays if they don't exist
         self.modules.prod.buttons = self.modules.prod.buttons or {}
         self.modules.prod.gauges = self.modules.prod.gauges or {}
@@ -26,12 +25,12 @@ return function()
             local x = startX + i
 
             -- Initialize button
-            local button = getModuleIfExists(self.panel, x, startY, panelNum)
+            local button = getModuleIfExists(panel, x, startY, panelNum)
             if button then
                 self.modules.prod.buttons[buttonIndex] = button
 
                 -- Initialize corresponding gauge (one unit above button)
-                local gauge = getModuleIfExists(self.panel, x, startY + 1, panelNum)
+                local gauge = getModuleIfExists(panel, x, startY + 1, panelNum)
                 if gauge then
                     self.modules.prod.gauges[buttonIndex] = gauge
                 end
@@ -39,20 +38,20 @@ return function()
         end
     end
 
-    function Display:initializeFlowBlock(startX, startY, panelNum, type)
+    function Display:initializeFlowBlock(panel, startX, startY, panelNum, type)
         -- Initialize gauge
-        local gauge = getModuleIfExists(self.panel, startX, startY, panelNum)
+        local gauge = getModuleIfExists(panel, startX, startY, panelNum)
         if gauge then
             self.modules.flow.gauges[type] = gauge
         end
 
         -- Initialize displays
-        local display1 = getModuleIfExists(self.panel, startX + 2, startY + 1, panelNum)
+        local display1 = getModuleIfExists(panel, startX + 2, startY + 1, panelNum)
         if display1 then
             self.modules.flow.displays[type] = display1
         end
 
-        local display2 = getModuleIfExists(self.panel, startX + 2, startY, panelNum)
+        local display2 = getModuleIfExists(panel, startX + 2, startY, panelNum)
         if display2 then
             self.modules.flow.displays[type] = display2
         end
