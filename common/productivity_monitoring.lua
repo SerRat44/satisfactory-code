@@ -1,10 +1,7 @@
 -- turbofuel-plant/common/productivity_monitoring.lua
 
 local ProductivityMonitoring = {
-    display = nil,
     machines = {},
-    productivity_history = {},
-    current_productivity = 0,
     emergency_state = false,
     networkCard = nil,
     light_switch = nil
@@ -17,7 +14,6 @@ function ProductivityMonitoring:new(dependencies)
     instance.colors = dependencies.colors
     instance.utils = dependencies.utils
     instance.config = dependencies.config
-    instance.productivity_history = {}
     instance.machines = {}
 
     -- Initialize network card
