@@ -39,36 +39,32 @@ function FlowMonitoring:initialize()
 end
 
 function FlowMonitoring:updateFlowDisplays()
-    -- Update flow gauges and displays for each type
+    -- Track totals during the main loop
+    local totals = {}
+
     for type, valves in pairs(self.valves) do
+        totals[type] = 0
+
         for i, valve in ipairs(valves) do
-            -- Update gauge if it exists
-            if self.display.flow.gauges[type] and self.display.flow.gauges[type][i] then
-                self.display.flow.gauges[type][i].limit = valve.userFlowLimit
-                self.display.flow.gauges[type][i].percent = valve.flow
-                self.utils:updateGaugeColor(self.display.flow.gauges[type][i])
+            local displayIndex = i - 1
+            totals[type] = totals[type] + (valve.flow or 0)
+
+            -- Update gauge and display if they exist
+            if self.display.flow.gauges[type] and self.display.flow.gauges[type][displayIndex] then
+                local gauge = self.display.flow.gauges[type][displayIndex]
+                gauge.limit = valve.userFlowLimit
+                gauge.percent = valve.flow / valve.userFlowLimit
+                self.utils:updateGaugeColor(gauge)
             end
 
-            -- Update display if it exists
-            if self.display.flow.displays[type] and self.display.flow.displays[type][i] then
-                self.display.flow.displays[type][i]:setText(self.utils:formatFlowDisplay(valve.flow))
+            if self.display.flow.displays[type] and self.display.flow.displays[type][displayIndex] then
+                self.display.flow.displays[type][displayIndex]:setText(self.utils:formatFlowDisplay(valve.flow))
             end
         end
-    end
-    self:updateTotalFlow()
-end
 
-function FlowMonitoring:updateTotalFlow()
-    -- Update totals for all types
-    for type, valves in pairs(self.valves) do
-        local total = 0
-        for _, valve in ipairs(valves) do
-            total = total + (valve.flow or 0)
-        end
-
-        -- Update the total display if it exists
+        -- Update total display
         if self.display.flow.displays["total_" .. type:lower()] then
-            self.display.flow.displays["total_" .. type:lower()]:setText(string.format("%.2f m³/s", total))
+            self.display.flow.displays["total_" .. type:lower()]:setText(self.utils:formatFlowDisplay(totals[type]))
         end
     end
 end
