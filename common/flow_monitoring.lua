@@ -58,19 +58,33 @@ function FlowMonitoring:updateValveFlowDisplays()
             end
 
             if self.display.flow.displays[type] and self.display.flow.displays[type][displayIndex] then
-                self.display.flow.displays[type][displayIndex]:setText(self.utils:formatFlowDisplay(valve.flow))
+                self.display.flow.displays[type][displayIndex]:setText(self.utils:formatValveFlowDisplay(valve.flow))
             end
         end
 
         -- Update total display
         if self.display.flow.displays["total_" .. type:lower()] then
-            self.display.flow.displays["total_" .. type:lower()]:setText(self.utils:formatFlowDisplay(totals[type]))
+            self.display.flow.displays["total_" .. type:lower()]:setText(self.utils:formatValveFlowDisplay(totals[type]))
         end
     end
 end
 
 function FlowMonitoring:updateItemFlowDisplays()
+    for type, gauge in pairs(self.display.flow.gauges) do
+        if type(gauge) ~= "table" then
+            local maxFlow = 780
+            local currentFlow = 0
 
+            gauge.limit = maxFlow
+            gauge.percent = currentFlow / maxFlow
+            self.utils:updateGaugeColor(gauge)
+
+            -- Update corresponding display if it exists
+            if self.display.flow.displays[type] then
+                self.display.flow.displays[type]:setText(self.utils:formatItemFlowDisplay(currentFlow))
+            end
+        end
+    end
 end
 
 function FlowMonitoring:update()

@@ -100,7 +100,7 @@ return function(dependencies)
         -- Initialize display
         local display = getModuleIfExists(self.panel, startX + 2, startY + 1, panelNum)
         if display then
-            self.modules.flow.displays["produced_" .. type] = display
+            self.modules.flow.displays[type] = display
         end
     end
 
