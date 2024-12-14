@@ -12,22 +12,19 @@ function Utils:new(dependencies)
 end
 
 function Utils:setComponentColor(component, color, emit)
-    if component then
-        local r = color[1] / 255
-        local g = color[2] / 255
-        local b = color[3] / 255
-        component:setColor(r, g, b, emit)
-    end
+    if not component then error("Component is nil") end
+    local r = color[1] / 255
+    local g = color[2] / 255
+    local b = color[3] / 255
+    component:setColor(r, g, b, emit)
 end
 
 function Utils:formatValveFlowDisplay(flow)
-    if flow == 0 then return "0" end
-    return tostring(math.floor(flow)) .. " m³/s"
+    return string.format("%.2f", flow) .. " m³/min"
 end
 
 function Utils:formatItemFlowDisplay(flow)
-    if flow == 0 then return "0" end
-    return tostring(math.floor(flow)) .. " m³/s"
+    return string.format("%.2f", flow) .. " i/min"
 end
 
 function Utils:getAvgProductivity(machines)

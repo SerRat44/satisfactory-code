@@ -134,21 +134,21 @@ function ProductivityMonitoring:updateProdIndicator()
     if not self.display.factory.avg_productivity_indicator then return end
 
     if self.emergency_state then
-        self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.COLOR.RED,
+        self.utils:setComponentColor(self.display.factory.avg_productivity_indicator, self.colors.COLOR.RED,
             self.colors.EMIT.INDICATOR)
     else
         local avgProductivity = self:avgProductivity()
         if avgProductivity >= 0.95 then
-            self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.COLOR.GREEN,
+            self.utils:setComponentColor(self.display.factory.avg_productivity_indicator, self.colors.COLOR.GREEN,
                 self.colors.EMIT.INDICATOR)
         elseif avgProductivity >= 0.5 then
-            self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.COLOR.YELLOW,
+            self.utils:setComponentColor(self.display.factory.avg_productivity_indicator, self.colors.COLOR.YELLOW,
                 self.colors.EMIT.INDICATOR)
         elseif avgProductivity > 0 then
-            self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.COLOR.ORANGE,
+            self.utils:setComponentColor(self.display.factory.avg_productivity_indicator, self.colors.COLOR.ORANGE,
                 self.colors.EMIT.INDICATOR)
         else
-            self.utils:setComponentColor(self.display.factory.health_indicator, self.colors.COLOR.RED,
+            self.utils:setComponentColor(self.display.factory.avg_productivity_indicator, self.colors.COLOR.RED,
                 self.colors.EMIT.INDICATOR)
         end
     end

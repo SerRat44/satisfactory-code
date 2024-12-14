@@ -51,34 +51,38 @@ return function(dependencies)
         self.modules.flow.displays[type] = self.modules.flow.displays[type] or {}
 
         local y = startY
+        local x = startX
         for i = 0, count do
             -- Initialize gauge
-            local gauge = getModuleIfExists(self.panel, startX, y, panelNum)
+            local gauge = getModuleIfExists(self.panel, x, y, panelNum)
             if gauge then
-                gauge.limit = 1
-                gauge.percent = 0
                 self.modules.flow.gauges[type][i] = gauge
             end
 
             -- Initialize display
-            local display = getModuleIfExists(self.panel, startX + 2, y + 1, panelNum)
+            local display = getModuleIfExists(self.panel, x + 2, y + 1, panelNum)
             if display then
-                display:setText("0.0 m³/min")
                 self.modules.flow.displays[type][i] = display
             end
-
             y = y - 3
+            if i == 2 then
+                x = x + 4
+                y = startY
+            end
         end
 
-        if count > 1 then
-            local totalDisplayX = startX + 1
-            local totalDisplayY = y + 1
+        local totalDisplayX, totalDisplayY
+        if count > 3 then
+            totalDisplayX = startX + 3
+            totalDisplayY = startY - 8
+        elseif count > 1 then
+            totalDisplayX = startX + 1
+            totalDisplayY = y + 1
+        end
 
-            local total_display = getModuleIfExists(self.panel, totalDisplayX, totalDisplayY, panelNum)
-            if total_display then
-                total_display:setText("0.0 m³/min")
-                self.modules.flow.displays["total_" .. type] = total_display
-            end
+        local total_display = getModuleIfExists(self.panel, totalDisplayX, totalDisplayY, panelNum)
+        if total_display then
+            self.modules.flow.displays["total_" .. type] = total_display
         end
     end
 
@@ -90,15 +94,12 @@ return function(dependencies)
         -- Initialize gauge
         local gauge = getModuleIfExists(self.panel, startX, startY, panelNum)
         if gauge then
-            gauge.limit = 1
-            gauge.percent = 0
             self.modules.flow.gauges[type] = gauge
         end
 
         -- Initialize display
         local display = getModuleIfExists(self.panel, startX + 2, startY + 1, panelNum)
         if display then
-            display:setText("0.0 i/min")
             self.modules.flow.displays["produced_" .. type] = display
         end
     end
