@@ -18,86 +18,98 @@ return function(dependencies)
     local dataCollectionActive = true
     local running = true
     local display, power, flowMonitoring, productivityMonitoring, modules, networkCard
+    local updateTimer = 0
 
     -- Create the control module table
     local controlModule = {}
 
-    -- Event handler mapping
-    local eventHandlers = {
-        NetworkMessage = function(_, _, _, _, type, data)
-            if type == "collection" then
-                dataCollectionActive = data
-            else
-                power:handleNetworkMessage(type, data)
-            end
-        end,
+    local function processEvent(eventData)
+        if not eventData[1] then return end
 
-        Trigger = function(_, source)
-            -- Handle emergency stop
+        local eventType = eventData[1]
+        local source = eventData[2]
+
+        print("Event received:", eventType, "from source:", source)
+
+        if eventType == "NetworkMessage" then
+            local _, _, _, _, msgType, msgData = table.unpack(eventData)
+            if msgType == "collection" then
+                dataCollectionActive = msgData
+            elseif power then
+                power:handleNetworkMessage(msgType, msgData)
+            end
+        elseif eventType == "Trigger" then
+            -- Check emergency stop
             if source == modules.factory.emergency_stop then
+                print("Emergency stop triggered")
                 productivityMonitoring:handleEmergencyStop()
                 return
             end
 
-            -- Handle factory buttons
+            -- Check factory buttons
             for i, button in ipairs(modules.factory.buttons) do
                 if source == button then
+                    print("Factory button pressed:", i)
                     productivityMonitoring:handleButtonPress(i)
                     return
                 end
             end
-
-            -- Handle flow control knobs
-            if modules.flow and modules.flow.knobs then
-                for type, knobs in pairs(modules.flow.knobs) do
-                    for i, knob in ipairs(knobs) do
-                        if source == knob then
-                            flowMonitoring:handleKnobChange(type, i, knob.value)
-                            return
-                        end
-                    end
-                end
-            end
-        end,
-
-        ChangeState = function(_, source)
+        elseif eventType == "ChangeState" then
             if power then
                 power:handleSwitchEvent(source)
             end
-        end,
-
-        PowerFuseChanged = function(_, source)
+        elseif eventType == "PowerFuseChanged" then
             if power then
                 power:handlePowerFuseEvent(source)
             end
-        end,
-    }
-
-    -- Cleanup function
-    local function cleanup()
-        print("Cleaning up control module...")
-        if networkCard then
-            event.clear(networkCard)
         end
-        if power then power:cleanup() end
-        if flowMonitoring then flowMonitoring:cleanup() end
-        if productivityMonitoring then productivityMonitoring:cleanup() end
-        event.clear()
-        running = false
     end
 
-    -- Main control loop
+    local function setupEventListeners()
+        print("Setting up event listeners...")
+        event.clear()
+
+        -- Listen to network card
+        if networkCard then
+            networkCard:open(101)
+            event.listen(networkCard)
+        end
+
+        -- Listen to emergency stop
+        if modules.factory.emergency_stop then
+            event.listen(modules.factory.emergency_stop)
+            print("Emergency stop listener set up")
+        end
+
+        -- Listen to factory buttons
+        for i, button in ipairs(modules.factory.buttons) do
+            if button then
+                event.listen(button)
+                print("Button", i, "listener set up")
+            end
+        end
+
+        -- Listen to power switches
+        if modules.power and modules.power.switches then
+            for name, switch in pairs(modules.power.switches) do
+                if switch then
+                    event.listen(switch)
+                    print("Power switch", name, "listener set up")
+                end
+            end
+        end
+    end
+
     controlModule.main = function()
         print("Initializing modules...")
 
-        -- Get the display panel
+        -- Get display panel
         local displayPanel = component.proxy(config.COMPONENT_IDS.DISPLAY_PANEL)
         if not displayPanel then
             error("Display panel not found!")
         end
 
         -- Initialize display
-        print("Creating display instance...")
         display = Display:new(displayPanel)
         if not display then
             error("Failed to create display instance")
@@ -115,7 +127,7 @@ return function(dependencies)
             error("Network card not found!")
         end
 
-        -- Create module instances with dependencies
+        -- Create module instances
         local modulesDependencies = {
             colors = colors,
             utils = utils,
@@ -124,50 +136,50 @@ return function(dependencies)
         }
 
         -- Initialize all modules
-        productivityMonitoring = ProductivityMonitoring:new(modulesDependencies)
-        flowMonitoring = FlowMonitoring:new(modulesDependencies)
         power = Power:new(modulesDependencies)
+        flowMonitoring = FlowMonitoring:new(modulesDependencies)
+        productivityMonitoring = ProductivityMonitoring:new(modulesDependencies)
 
+        -- Initialize components
         print("Initializing components...")
-        event.clear() -- Clear existing events before setting up new ones
-
-        -- Initialize modules
         power:initialize()
         flowMonitoring:initialize()
         productivityMonitoring:initialize()
 
-        -- Set up network listening
-        print("Setting up network...")
-        networkCard:open(101)
-        event.listen(networkCard)
+        -- Set up event listeners
+        setupEventListeners()
 
         print("Starting main control loop...")
         while running do
-            -- Handle events
-            local eventData = { event.pull(config.UPDATE_INTERVAL) }
-            local eventType = eventData[1]
-
-            if eventType then
-                local handler = eventHandlers[eventType]
-                if handler then
-                    handler(table.unpack(eventData))
-                end
+            -- Process any pending events
+            local eventData = { event.pull(0.1) } -- Short timeout for responsive event handling
+            if eventData[1] then
+                processEvent(eventData)
             end
 
-            -- Regular updates
-            if power then power:update() end
-            if flowMonitoring then flowMonitoring:update() end
-            if productivityMonitoring then productivityMonitoring:update() end
+            -- Regular updates every second
+            updateTimer = updateTimer + 0.1
+            if updateTimer >= 1.0 then
+                if power then power:update() end
+                if flowMonitoring then flowMonitoring:update() end
+                if productivityMonitoring then productivityMonitoring:update() end
 
-            -- Broadcast status if data collection is active
-            if dataCollectionActive then
-                if productivityMonitoring then productivityMonitoring:broadcastMachineStatus() end
-                if flowMonitoring then flowMonitoring:broadcastFlowStatus() end
-                if power then power:broadcastPowerStatus() end
+                -- Broadcast status if data collection is active
+                if dataCollectionActive then
+                    if productivityMonitoring then productivityMonitoring:broadcastMachineStatus() end
+                    if flowMonitoring then flowMonitoring:broadcastFlowStatus() end
+                    if power then power:broadcastPowerStatus() end
+                end
+
+                updateTimer = 0
             end
         end
 
-        cleanup()
+        -- Cleanup on exit
+        if power then power:cleanup() end
+        if flowMonitoring then flowMonitoring:cleanup() end
+        if productivityMonitoring then productivityMonitoring:cleanup() end
+        event.clear()
     end
 
     return controlModule
