@@ -7,7 +7,10 @@ return function(dependencies)
         modules = {
             factory = {},
             power = {},
-            flow = {}
+            flow = {
+                liquids = {},
+                items   = {}
+            }
         }
     }
 
@@ -44,11 +47,11 @@ return function(dependencies)
 
     function Display:initializeValveFlowBlock(startX, startY, panelNum, type, count)
         -- Create tables if they don't exist
-        self.modules.flow.gauges = self.modules.flow.gauges or {}
-        self.modules.flow.displays = self.modules.flow.displays or {}
+        self.modules.flow.liquids.gauges = self.modules.flow.liquids.gauges or {}
+        self.modules.flow.liquids.displays = self.modules.flow.liquids.displays or {}
 
-        self.modules.flow.gauges[type] = self.modules.flow.gauges[type] or {}
-        self.modules.flow.displays[type] = self.modules.flow.displays[type] or {}
+        self.modules.flow.liquids.gauges[type] = self.modules.flow.liquids.gauges[type] or {}
+        self.modules.flow.liquids.displays[type] = self.modules.flow.liquids.displays[type] or {}
 
         local y = startY
         local x = startX
@@ -62,7 +65,7 @@ return function(dependencies)
             -- Initialize display
             local display = getModuleIfExists(self.panel, x + 2, y + 1, panelNum)
             if display then
-                self.modules.flow.displays[type][i] = display
+                self.modules.flow.liquids.displays[type][i] = display
             end
             y = y - 3
             if i == 2 then
@@ -82,25 +85,25 @@ return function(dependencies)
 
         local total_display = getModuleIfExists(self.panel, totalDisplayX, totalDisplayY, panelNum)
         if total_display then
-            self.modules.flow.displays["total_" .. type] = total_display
+            self.modules.flow.liquids.displays["total_" .. type] = total_display
         end
     end
 
     function Display:initializeItemFlowBlock(startX, startY, panelNum, type)
         -- Create tables if they don't exist
-        self.modules.flow.gauges = self.modules.flow.gauges or {}
-        self.modules.flow.displays = self.modules.flow.displays or {}
+        self.modules.flow.items.gauges = self.modules.flow.items.gauges or {}
+        self.modules.flow.items.displays = self.modules.flow.items.displays or {}
 
         -- Initialize gauge
         local gauge = getModuleIfExists(self.panel, startX, startY, panelNum)
         if gauge then
-            self.modules.flow.gauges[type] = gauge
+            self.modules.flow.items.gauges[type] = gauge
         end
 
         -- Initialize display
         local display = getModuleIfExists(self.panel, startX + 2, startY + 1, panelNum)
         if display then
-            self.modules.flow.displays[type] = display
+            self.modules.flow.items.displays[type] = display
         end
     end
 

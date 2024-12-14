@@ -48,26 +48,27 @@ function FlowMonitoring:updateValveFlowDisplays()
             local displayIndex = i
             totals[type] = totals[type] + (valve.flow or 0)
 
-            if self.display.flow.gauges[type] and self.display.flow.gauges[type][displayIndex] then
-                local gauge = self.display.flow.gauges[type][displayIndex]
+            if self.display.flow.liquids.gauges[type] and self.display.flow.liquids.gauges[type][displayIndex] then
+                local gauge = self.display.flow.liquids.gauges[type][displayIndex]
                 gauge.limit = valve.userFlowLimit
                 gauge.percent = valve.flow / valve.userFlowLimit
                 self.utils:updateGaugeColor(gauge)
             end
 
-            if self.display.flow.displays[type] and self.display.flow.displays[type][displayIndex] then
-                self.display.flow.displays[type][displayIndex]:setText(self.utils:formatValveFlowDisplay(valve.flow))
+            if self.display.flow.liquids.displays[type] and self.display.flow.liquids.displays[type][displayIndex] then
+                self.display.flow.liquids.displays[type][displayIndex]:setText(self.utils:formatValveFlowDisplay(valve
+                    .flow))
             end
         end
 
-        if self.display.flow.displays["total_" .. type] then
-            self.display.flow.displays["total_" .. type]:setText(self.utils:formatValveFlowDisplay(totals[type]))
+        if self.display.flow.liquids.displays["total_" .. type] then
+            self.display.flow.liquids.displays["total_" .. type]:setText(self.utils:formatValveFlowDisplay(totals[type]))
         end
     end
 end
 
 function FlowMonitoring:updateItemFlowDisplays()
-    for type, gauge in pairs(self.display.flow.gauges) do
+    for type, gauge in pairs(self.display.flow.items.gauges) do
         local maxFlow = 780
         local currentFlow = 0
 
@@ -76,8 +77,8 @@ function FlowMonitoring:updateItemFlowDisplays()
         self.utils:updateGaugeColor(gauge)
 
         -- Update corresponding display if it exists
-        if self.display.flow.displays[type] then
-            self.display.flow.displays[type]:setText(self.utils:formatItemFlowDisplay(currentFlow))
+        if self.display.flow.items.displays[type] then
+            self.display.flow.items.displays[type]:setText(self.utils:formatItemFlowDisplay(currentFlow))
         end
     end
 end
