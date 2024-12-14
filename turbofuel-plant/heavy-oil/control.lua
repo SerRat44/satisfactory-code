@@ -114,7 +114,7 @@ return function(dependencies)
         print("Starting main control loop...")
         while running do
             -- Process any pending events
-            local eventData = { event.pull(0.1) } -- Short timeout for responsive event handling
+            local eventData = { event.pull() } -- Short timeout for responsive event handling
             if eventData[1] then
                 processEvent(eventData)
             end
