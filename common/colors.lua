@@ -9,7 +9,7 @@ return {
     },
     EMIT = {
         INDICATOR = 4,
-        BUTTON = 1,
+        BUTTON = 0.5,
         OFF = 0
     }
 }
