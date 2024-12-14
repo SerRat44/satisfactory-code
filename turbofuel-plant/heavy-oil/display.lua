@@ -92,7 +92,7 @@ return function(dependencies)
         self.modules.flow.displays[type] = self.modules.flow.displays[type] or {}
         self.modules.flow.knobs[type] = self.modules.flow.knobs[type] or {}
 
-        local totalY = startY
+        local y = y
         for i = 0, count do
             -- Initialize gauge
             local gauge = getModuleIfExists(self.panel, startX, startY, panelNum)
@@ -109,22 +109,13 @@ return function(dependencies)
                 self.modules.flow.displays[type][i] = display
             end
 
-            -- Initialize knob/potentiometer
-            local potentiometer = getModuleIfExists(self.panel, startX + 2, startY, panelNum)
-            if potentiometer then
-                potentiometer.enabled = true
-                potentiometer.max = 600
-                potentiometer.min = 0
-                self.modules.flow.knobs[type][i] = potentiometer
-            end
-
-            totalY = totalY - 3
+            y = y - 3
         end
 
         -- Initialize total display if needed
         if count > 1 then
             local totalDisplayX = startX + 1
-            local totalDisplayY = totalY - 2
+            local totalDisplayY = y + 1
 
             local total_display = getModuleIfExists(self.panel, totalDisplayX, totalDisplayY, panelNum)
             if total_display then
