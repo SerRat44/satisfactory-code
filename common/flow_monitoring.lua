@@ -54,10 +54,8 @@ function FlowMonitoring:updateFlowDisplays()
                 self.display.flow.displays[type][i]:setText(self.utils:formatFlowDisplay(valve.flow))
             end
         end
-
-        -- Update total flow display if it exists
-        self:updateTotalFlow(type)
     end
+    self:updateTotalFlow()
 end
 
 function FlowMonitoring:updateTotalFlow()
@@ -68,15 +66,9 @@ function FlowMonitoring:updateTotalFlow()
             total = total + (valve.flow or 0)
         end
 
-        -- Find any display key that starts with "total_" and contains our type
-        for displayKey, display in pairs(self.display.flow.displays) do
-            if displayKey:match(type[1] .. "_" .. type[2]) then
-                if type[1] == "produced" then
-                    display:setText(string.format("%.2f/min", total))
-                elseif type[1] == "total" then
-                    display:setText(string.format("%.2f m³/s", total))
-                end
-            end
+        -- Update the total display if it exists
+        if self.display.flow.displays["total_" .. type:lower()] then
+            self.display.flow.displays["total_" .. type:lower()]:setText(string.format("%.2f m³/s", total))
         end
     end
 end
