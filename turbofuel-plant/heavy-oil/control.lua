@@ -1,21 +1,15 @@
 -- turbofuel-plant/heavy-oil/control.lua
 return function(dependencies)
-    local colors = dependencies.colors
+    local constants = dependencies.constants
     local utils = dependencies.utils
     local config = dependencies.config
-    local Display = dependencies.display
-    local Power = dependencies.power
-    local FlowMonitoring = dependencies.flowMonitoring
-    local ProductivityMonitoring = dependencies.productivityMonitoring
-
-    -- Create the Display class
-    local Display = Display({ colors = colors, config = config })
-    if not Display then
-        error("Failed to create Display class")
-    end
+    local display = dependencies.display
+    local flowMonitoring = dependencies.flowMonitoring
+    local machineControl = dependencies.machineControl
+    local powerControl = dependencies.powerControl
 
     -- Local variables for module state
-    local display, power, flowMonitoring, productivityMonitoring, modules, networkCard
+    local power, flowMonitoring, productivityMonitoring, modules, networkCard
 
     -- Create the control module table
     local controlModule = {}
@@ -57,18 +51,6 @@ return function(dependencies)
             error("Display panel not found!")
         end
 
-        -- Initialize display
-        display = Display:new(displayPanel)
-        if not display then
-            error("Failed to create display instance")
-        end
-
-        print("Initializing display modules...")
-        modules = display:initialize()
-        if not modules then
-            error("Failed to initialize display modules")
-        end
-
         -- Get network card
         networkCard = computer.getPCIDevices(classes.NetworkCard)[1]
         if not networkCard then
@@ -80,13 +62,9 @@ return function(dependencies)
             colors = colors,
             utils = utils,
             config = config,
-            display = modules
+            display = Display
         }
 
-        -- Initialize all modules
-        power = Power:new(modulesDependencies)
-        flowMonitoring = FlowMonitoring:new(modulesDependencies)
-        productivityMonitoring = ProductivityMonitoring:new(modulesDependencies)
 
         -- Initialize components
         print("Initializing components...")

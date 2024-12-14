@@ -60,8 +60,7 @@ return function()
     function Display:initializeProdModules()
         -- Create necessary tables
         self.modules.prod.indicators = self.modules.prod.indicators or {}
-        self.modules.flow.items.gauges = self.modules.flow.items.gauges or {}
-        self.modules.flow.items.displays = self.modules.flow.items.displays or {}
+        self.modules.prod.gauges = self.modules.flow.gauges or {}
 
         -- Initialize machine rows
         self:initializeMachineRow(1, 2, 0, 10)

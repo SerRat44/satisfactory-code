@@ -7,23 +7,6 @@ local ProductivityMonitoring = {
     light_switch = nil
 }
 
-function ProductivityMonitoring:new(dependencies)
-    local instance = {}
-    setmetatable(instance, { __index = self })
-    instance.display = dependencies.display
-    instance.colors = dependencies.colors
-    instance.utils = dependencies.utils
-    instance.config = dependencies.config
-
-    -- Initialize network card
-    instance.networkCard = computer.getPCIDevices(classes.NetworkCard)[1]
-    if not instance.networkCard then
-        error("Network card not found in Productivity Monitoring module")
-    end
-
-    return instance
-end
-
 function ProductivityMonitoring:initialize()
     -- Initialize light switch
     self.light_switch = component.proxy(self.config.POWER.LIGHT_SWITCH)
