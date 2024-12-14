@@ -278,9 +278,7 @@ function Power:broadcastPowerStatus()
 end
 
 function Power:update()
-    while true do
-        self:updatePowerDisplays()
-    end
+    self:updatePowerDisplays()
 end
 
 function Power:handleNetworkMessage(type, data)

@@ -22,42 +22,6 @@ return function(dependencies)
     -- Create the control module table
     local controlModule = {}
 
-    -- Set up event listeners for all components
-    local function setupEventListeners()
-        print("Setting up event listeners...")
-
-        -- Listen to emergency stop
-        if modules.factory.emergency_stop then
-            event.listen(modules.factory.emergency_stop)
-            print("Emergency stop listener set up")
-        end
-
-        -- Listen to factory buttons
-        for i, button in ipairs(modules.factory.buttons) do
-            if button then
-                event.listen(button)
-                print("Button", i, "listener set up")
-            end
-        end
-
-        -- Listen to power switches
-        if modules.power and modules.power.switches then
-            for name, switch in pairs(modules.power.switches) do
-                if switch then
-                    event.listen(switch)
-                    print("Power switch", name, "listener set up")
-                end
-            end
-        end
-
-        -- Listen to network card
-        if networkCard then
-            networkCard:open(101)
-            event.listen(networkCard)
-            print("Network card listener set up")
-        end
-    end
-
     local function processEvent(eventData)
         if not eventData[1] then return end
 
@@ -146,9 +110,8 @@ return function(dependencies)
         flowMonitoring:initialize()
         productivityMonitoring:initialize()
 
-        -- Set up initial event listeners
-        event.clear() -- Clear any existing listeners first
-        setupEventListeners()
+        networkCard:open(101)
+        event.listen(networkCard)
 
         print("Starting main control loop...")
         while running do
@@ -156,8 +119,6 @@ return function(dependencies)
             local eventData = { event.pull() }
             if eventData[1] then
                 processEvent(eventData)
-                -- Ensure event listeners are still active after processing
-                setupEventListeners()
             end
 
             -- Regular updates
