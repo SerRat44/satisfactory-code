@@ -73,7 +73,7 @@ function ProductivityMonitoring:handleEmergencyStop()
         end
     end
 
-    self:updateProductivityIndicator()
+    self:updateProdIndicator()
     self:updateEmergencyButton()
 
     if self.emergency_state then

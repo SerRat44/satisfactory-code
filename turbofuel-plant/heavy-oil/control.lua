@@ -40,7 +40,7 @@ return function(dependencies)
         for _, program in ipairs(programs) do
             if eventType == "Trigger" and program.handleIOTriggerEvent then
                 program:handleIOTriggerEvent(source)
-            elseif eventType == "StateChanged" and program.handleIOSwitchEvent then
+            elseif eventType == "ChangeState" and program.handleIOSwitchEvent then
                 program:handleIOSwitchEvent(source)
             elseif eventType == "PowerFuseChanged" and program.handlePowerFuseEvent then
                 program:handlePowerFuseEvent(source)

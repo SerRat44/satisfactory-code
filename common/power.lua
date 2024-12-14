@@ -4,9 +4,11 @@ local Power = {
     power_switch = nil,
     battery_switch = nil,
     light_switch = nil,
-    display = nil,
     networkCard = nil,
-    remoteControl = false
+    remoteControl = false,
+    mainGridCircuit = nil,
+    factoryCircuit = nil,
+    batteryCircuit = nil
 }
 
 function Power:new(dependencies)
@@ -47,18 +49,14 @@ function Power:initialize()
     end
 
     -- Get the connectors
-    local mainGridConnector = self.power_switch:getPowerConnectors()[2]
-    local factoryConnector = self.power_switch:getPowerConnectors()[1]
-    local batteryConnector = self.battery_switch:getPowerConnectors()[1]
-
-    if not mainGridConnector or not factoryConnector or not batteryConnector then
-        error("Failed to initialize power connectors")
-    end
+    self.mainGridCircuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
+    self.factoryCircuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
+    self.batteryCircuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
 
     -- Set up event listening for power fuses
-    event.listen(mainGridConnector)
-    event.listen(factoryConnector)
-    event.listen(batteryConnector)
+    event.listen(self.mainGridCircuit)
+    event.listen(self.factoryCircuit)
+    event.listen(self.batteryCircuit)
 
     -- Set up event listening for IO switches
     event.listen(powerIO)
@@ -78,25 +76,19 @@ function Power:handlePowerFuseEvent(source)
     print("Handling power fuse event from source:", source)
 
     if source == self.power_switch then
-        -- Update main power indicators
-        local main_circuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
-        local factory_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
-
         -- Update main grid indicator
         self.utils:setComponentColor(self.display.power.indicators.MAIN,
-            main_circuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
+            self.mainGridCircuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
             self.colors.EMIT.INDICATOR)
 
         -- Update factory indicator
         self.utils:setComponentColor(self.display.power.indicators.FACTORY,
-            factory_circuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
+            self.factoryCircuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
             self.colors.EMIT.INDICATOR)
     elseif source == self.battery_switch then
-        -- Update battery indicators
-        local battery_circuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
-
+        -- Update battery indicator
         self.utils:setComponentColor(self.display.power.indicators.BATTERY,
-            battery_circuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
+            self.batteryCircuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
             self.colors.EMIT.INDICATOR)
     end
 end
