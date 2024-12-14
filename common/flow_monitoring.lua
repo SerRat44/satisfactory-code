@@ -80,12 +80,12 @@ function FlowMonitoring:getProductFlow(machine)
     local recipe = machine:getRecipe()
     local product = recipe:getProducts()[1][1]
     local runsPerMin = 60.0 / recipe.duration
-    local potential = machine.potential * machine.productionBoost * machine.productivity
+    local potential = machine.potential * machine.productionBoost
 
     for _, prod in ipairs(recipe:getProducts()) do
         local itemsPerMin = prod[1].amount * runsPerMin
 
-        if item.type.form == 2 or item.type.form == 3 then
+        if product.type.form == 2 or item.type.form == 3 then
             itemsPerMin = itemsPerMin / 1000
         end
 
