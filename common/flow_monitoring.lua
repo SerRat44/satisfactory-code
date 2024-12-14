@@ -25,13 +25,15 @@ end
 
 function FlowMonitoring:initialize()
     -- Initialize valves based on config
+    self.valves = {}
     for type, valveIds in pairs(self.config.VALVES) do
         self.valves[type] = {}
         for i, id in ipairs(valveIds) do
-            self.valves[type][i] = component.proxy(id)
-            if not self.valves[type][i] then
-                error(string.format("Valve not found: %s_%d", type, i))
+            local valve = component.proxy(id)
+            if not valve then
+                error(string.format("Valve not found: %s - ID: %s", type, id))
             end
+            self.valves[type][i] = valve
         end
     end
 end
