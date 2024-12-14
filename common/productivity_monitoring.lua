@@ -57,8 +57,6 @@ function ProductivityMonitoring:initialize()
         if self.display.factory.emergency_stop then
             print("Setting up emergency stop listener")
             event.listen(self.display.factory.emergency_stop)
-            self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT
-                .OFF)
         end
     end
 
@@ -76,12 +74,11 @@ function ProductivityMonitoring:handleEmergencyStop()
     end
 
     self:updateProductivityIndicator()
+    self:updateEmergencyButton()
 
     if self.emergency_state then
-        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.BUTTON)
         self.light_switch.colorSlot = 1
     else
-        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.OFF)
         self.light_switch.colorSlot = 6
     end
 
@@ -132,7 +129,7 @@ function ProductivityMonitoring:updateGauge(index)
     end
 end
 
-function ProductivityMonitoring:updateProductivityIndicator()
+function ProductivityMonitoring:updateProdIndicator()
     if not self.display.factory.avg_productivity_indicator then return end
 
     if self.emergency_state then
@@ -179,12 +176,20 @@ function ProductivityMonitoring:updateButton(index)
     end
 end
 
+function ProductivityMonitoring:updateEmergencyButton()
+    if self.emergency_state then
+        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.BUTTON)
+    else
+        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.OFF)
+    end
+end
+
 function ProductivityMonitoring:updateAllDisplays()
     for i = 1, #self.machines do
         self:updateButton(i)
         self:updateGauge(i)
     end
-    self:updateProductivityIndicator()
+    self:updateProdIndicator()
 end
 
 function ProductivityMonitoring:broadcastMachineStatus()

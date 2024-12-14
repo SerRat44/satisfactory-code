@@ -15,53 +15,10 @@ return function(dependencies)
     end
 
     -- Local variables for module state
-    local running = true
     local display, power, flowMonitoring, productivityMonitoring, modules, networkCard
 
     -- Create the control module table
     local controlModule = {}
-
-    local function processEvent(eventData)
-        if not eventData[1] then return end
-
-        local eventType = eventData[1]
-        local source = eventData[2]
-
-        print("Event received:", eventType, "from source:", source)
-
-        if eventType == "NetworkMessage" then
-            local _, _, _, _, msgType, msgData = table.unpack(eventData)
-            if msgType == "collection" then
-                dataCollectionActive = msgData
-            elseif power then
-                power:handleNetworkMessage(msgType, msgData)
-            end
-        elseif eventType == "Trigger" then
-            -- Check emergency stop
-            if source == modules.factory.emergency_stop then
-                print("Emergency stop triggered")
-                productivityMonitoring:handleEmergencyStop()
-                return
-            end
-
-            -- Check factory buttons
-            for i, button in ipairs(modules.factory.buttons) do
-                if source == button then
-                    print("Factory button pressed:", i)
-                    productivityMonitoring:handleButtonPress(i)
-                    return
-                end
-            end
-        elseif eventType == "ChangeState" then
-            if power then
-                power:handleSwitchEvent(source)
-            end
-        elseif eventType == "PowerFuseChanged" then
-            if power then
-                power:handlePowerFuseEvent(source)
-            end
-        end
-    end
 
     controlModule.main = function()
         print("Initializing modules...")
