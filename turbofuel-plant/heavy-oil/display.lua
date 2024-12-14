@@ -5,12 +5,9 @@ return function(dependencies)
     local Display = {
         panel = nil,
         modules = {
-            factory = {},
+            prod = {},
             power = {},
-            flow = {
-                liquids = {},
-                items   = {}
-            }
+            flow = {}
         }
     }
 
@@ -24,22 +21,22 @@ return function(dependencies)
 
     function Display:initializeMachineRow(startX, startY, panelNum, count)
         -- Create arrays if they don't exist
-        self.modules.factory.buttons = self.modules.factory.buttons or {}
-        self.modules.factory.gauges = self.modules.factory.gauges or {}
+        self.modules.prod.buttons = self.modules.prod.buttons or {}
+        self.modules.prod.gauges = self.modules.prod.gauges or {}
 
         for i = 0, count - 1 do
-            local buttonIndex = #self.modules.factory.buttons + 1
+            local buttonIndex = #self.modules.prod.buttons + 1
             local x = startX + i
 
             -- Initialize button
             local button = getModuleIfExists(self.panel, x, startY, panelNum)
             if button then
-                self.modules.factory.buttons[buttonIndex] = button
+                self.modules.prod.buttons[buttonIndex] = button
 
                 -- Initialize corresponding gauge (one unit above button)
                 local gauge = getModuleIfExists(self.panel, x, startY + 1, panelNum)
                 if gauge then
-                    self.modules.factory.gauges[buttonIndex] = gauge
+                    self.modules.prod.gauges[buttonIndex] = gauge
                 end
             end
         end
@@ -115,9 +112,8 @@ return function(dependencies)
         self:initializeMachineRow(1, 5, 0, 10)
 
         -- Initialize other factory modules
-        self.modules.factory.emergency_stop = self.panel:getModule(10, 10, 0)
-        self.modules.factory.avg_productivity_indicator = self.panel:getModule(2, 10, 0)
-        self.modules.factory.productivity_display = self.panel:getModule(2, 9, 0)
+        self.modules.prod.emergency_stop = self.panel:getModule(10, 10, 0)
+        self.modules.prod.avg_productivity_indicator = self.panel:getModule(2, 10, 0)
     end
 
     function Display:initializeFlowModules()
@@ -139,14 +135,13 @@ return function(dependencies)
         -- Initialize power switches
         self.modules.power.switches.MAIN = self.panel:getModule(2, 0, 2)
         self.modules.power.switches.BATTERY = self.panel:getModule(6, 0, 2)
-        self.modules.power.switches.REMOTE_CONTROL = self.panel:getModule(9, 0, 2)
         self.modules.power.switches.LIGHTS = self.panel:getModule(10, 0, 2)
 
         -- Initialize power indicators
         self.modules.power.indicators.MAIN = self.panel:getModule(0, 1, 2)
-        self.modules.power.indicators.MAIN_SWITCH = self.panel:getModule(2, 1, 2)
+        self.modules.power.indicators.MAIN_SWITCH = self.panel:getModule(2, 2, 2)
         self.modules.power.indicators.FACTORY = self.panel:getModule(4, 1, 2)
-        self.modules.power.indicators.BATTERY_SWITCH = self.panel:getModule(6, 1, 2)
+        self.modules.power.indicators.BATTERY_SWITCH = self.panel:getModule(6, 2, 2)
         self.modules.power.indicators.BATTERY = self.panel:getModule(8, 1, 2)
 
         -- Initialize battery displays
@@ -157,8 +152,8 @@ return function(dependencies)
         self.modules.power.BATTERY.MWH = self.panel:getModule(7, 6, 2)
 
         -- Initialize power displays
-        self.modules.power.POWER_DISPLAYS.MAIN_PRODUCED = self.panel:getModule(0, 3, 2)
-        self.modules.power.POWER_DISPLAYS.MAIN_USED = self.panel:getModule(1, 3, 2)
+        self.modules.power.POWER_DISPLAYS.MAIN_USED = self.panel:getModule(0, 3, 2)
+        self.modules.power.POWER_DISPLAYS.MAIN_PRODUCED = self.panel:getModule(1, 3, 2)
         self.modules.power.POWER_DISPLAYS.FACTORY_USED = self.panel:getModule(4, 3, 2)
     end
 
@@ -185,7 +180,7 @@ return function(dependencies)
 
     function Display:initialize()
         -- Initialize all module types
-        self:initializeFactoryModules()
+        self:initializeProdModules()
         self:initializeFlowModules()
         self:initializePowerModules()
 

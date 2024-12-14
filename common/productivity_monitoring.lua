@@ -43,8 +43,8 @@ function ProductivityMonitoring:initialize()
     end
 
     -- Listen to machine buttons
-    if self.display and self.display.factory then
-        for i, button in ipairs(self.display.factory.buttons) do
+    if self.display and self.display.prod then
+        for i, button in ipairs(self.display.prod.buttons) do
             if button then
                 event.listen(button)
             else
@@ -53,8 +53,8 @@ function ProductivityMonitoring:initialize()
         end
 
         -- Initialize emergency stop
-        if self.display.factory.emergency_stop then
-            event.listen(self.display.factory.emergency_stop)
+        if self.display.prod.emergency_stop then
+            event.listen(self.display.prod.emergency_stop)
         end
     end
 
@@ -111,7 +111,7 @@ function ProductivityMonitoring:avgProductivity()
 end
 
 function ProductivityMonitoring:updateGauge(index)
-    local gauge = self.display.factory.gauges[index]
+    local gauge = self.display.prod.gauges[index]
     local machine = self.machines[index]
 
     if gauge then
@@ -129,31 +129,31 @@ function ProductivityMonitoring:updateGauge(index)
 end
 
 function ProductivityMonitoring:updateProdIndicator()
-    if not self.display.factory.avg_productivity_indicator then return end
+    if not self.display.prod.avg_productivity_indicator then return end
 
     if self.emergency_state then
-        self.utils:setComponentColor(self.display.factory.avg_productivity_indicator, self.colors.COLOR.RED,
+        self.utils:setComponentColor(self.display.prod.avg_productivity_indicator, self.colors.COLOR.RED,
             self.colors.EMIT.INDICATOR)
     else
         local avgProductivity = self:avgProductivity()
         if avgProductivity >= 0.95 then
-            self.utils:setComponentColor(self.display.factory.avg_productivity_indicator, self.colors.COLOR.GREEN,
+            self.utils:setComponentColor(self.display.prod.avg_productivity_indicator, self.colors.COLOR.GREEN,
                 self.colors.EMIT.INDICATOR)
         elseif avgProductivity >= 0.5 then
-            self.utils:setComponentColor(self.display.factory.avg_productivity_indicator, self.colors.COLOR.YELLOW,
+            self.utils:setComponentColor(self.display.prod.avg_productivity_indicator, self.colors.COLOR.YELLOW,
                 self.colors.EMIT.INDICATOR)
         elseif avgProductivity > 0 then
-            self.utils:setComponentColor(self.display.factory.avg_productivity_indicator, self.colors.COLOR.ORANGE,
+            self.utils:setComponentColor(self.display.prod.avg_productivity_indicator, self.colors.COLOR.ORANGE,
                 self.colors.EMIT.INDICATOR)
         else
-            self.utils:setComponentColor(self.display.factory.avg_productivity_indicator, self.colors.COLOR.RED,
+            self.utils:setComponentColor(self.display.prod.avg_productivity_indicator, self.colors.COLOR.RED,
                 self.colors.EMIT.INDICATOR)
         end
     end
 end
 
 function ProductivityMonitoring:updateButton(index)
-    local button = self.display.factory.buttons[index]
+    local button = self.display.prod.buttons[index]
     local machine = self.machines[index]
 
     if not button or not machine then return end
@@ -176,9 +176,9 @@ end
 
 function ProductivityMonitoring:updateEmergencyButton()
     if self.emergency_state then
-        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.BUTTON)
+        self.utils:setComponentColor(self.display.prod.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.BUTTON)
     else
-        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.OFF)
+        self.utils:setComponentColor(self.display.prod.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.OFF)
     end
 end
 
@@ -204,16 +204,16 @@ end
 
 function ProductivityMonitoring:handleIOTriggerEvent(source)
     -- Check emergency stop
-    if source == self.display.factory.emergency_stop then
+    if source == self.display.prod.emergency_stop then
         print("Emergency stop triggered")
         self:handleEmergencyStop()
         return
     end
 
     -- Check factory buttons
-    for i, button in ipairs(self.display.factory.buttons) do
+    for i, button in ipairs(self.display.prod.buttons) do
         if source == button then
-            print("Factory button pressed:", i)
+            print("machine button pressed:", i)
             self:handleButtonPress(i)
             return
         end
