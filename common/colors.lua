@@ -4,7 +4,7 @@ return {
     COLOR = {
         GREEN = { 0, 255, 0 },
         YELLOW = { 255, 255, 0 },
-        ORANGE = { 255, 95, 31 },
+        ORANGE = { 255, 99, 25 },
         RED = { 255, 0, 0 }
     },
     EMIT = {
