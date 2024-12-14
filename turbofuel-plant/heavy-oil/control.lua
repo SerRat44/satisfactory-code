@@ -4,7 +4,7 @@ return function(programs)
     local machineControl = programs.machineControl
     local powerControl = programs.powerControl
 
-    for index, value in ipairs(myTable) do
+    for index, value in ipairs(programs) do
         print(index, value)
     end
 
