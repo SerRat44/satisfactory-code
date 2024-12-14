@@ -101,7 +101,7 @@ function Power:handlePowerFuseEvent(source)
     end
 end
 
-function Power:handleSwitchEvent(source)
+function Power:handleIOSwitchEvent(source)
     local powerIO = self.display.power.switches.MAIN
     local batteryIO = self.display.power.switches.BATTERY
     local lightIO = self.display.power.switches.LIGHTS
@@ -304,7 +304,7 @@ function Power:processEvents()
     if eventType == "PowerFuseChanged" then
         self:handlePowerFuseEvent(source)
     elseif eventType == "StateChanged" then
-        self:handleSwitchEvent(source)
+        self:handleIOSwitchEvent(source)
     end
 end
 
@@ -312,6 +312,7 @@ function Power:update()
     self:updatePowerDisplays()
     self:updateIOColors()
     self:processEvents()
+    self:broadcastPowerStatus()
 end
 
 function Power:handleNetworkMessage(type, data)
