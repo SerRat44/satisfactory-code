@@ -203,7 +203,7 @@ function ProductivityMonitoring:handleIOTriggerEvent(source)
     -- Check emergency stop
     if source == self.display.factory.emergency_stop then
         print("Emergency stop triggered")
-        ProductivityMonitoring:handleEmergencyStop()
+        self:handleEmergencyStop()
         return
     end
 
@@ -211,7 +211,7 @@ function ProductivityMonitoring:handleIOTriggerEvent(source)
     for i, button in ipairs(self.display.factory.buttons) do
         if source == button then
             print("Factory button pressed:", i)
-            ProductivityMonitoring:handleButtonPress(i)
+            self:handleButtonPress(i)
             return
         end
     end
@@ -223,7 +223,7 @@ function ProductivityMonitoring:processEvents()
     local source = eventData[2]
 
     if eventType == "Trigger" then
-        ProductivityMonitoring:handleIOTriggerEvent(source)
+        self:handleIOTriggerEvent(source)
     end
 end
 
