@@ -98,7 +98,7 @@ return function(dependencies)
         -- Initialize display
         local display = getModuleIfExists(self.panel, startX + 2, startY + 1, panelNum)
         if display then
-            display:setText("0.0 items/min")
+            display:setText("0.0 i/min")
             self.modules.flow.displays["produced_" .. type] = display
         end
     end

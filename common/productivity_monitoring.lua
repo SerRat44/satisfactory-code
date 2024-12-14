@@ -231,14 +231,14 @@ function ProductivityMonitoring:processEvents()
 
     if eventType == "Trigger" then
         -- Check emergency stop
-        if source == modules.factory.emergency_stop then
+        if source == self.display.factory.emergency_stop then
             print("Emergency stop triggered")
             productivityMonitoring:handleEmergencyStop()
             return
         end
 
         -- Check factory buttons
-        for i, button in ipairs(modules.factory.buttons) do
+        for i, button in ipairs(self.display.factory.buttons) do
             if source == button then
                 print("Factory button pressed:", i)
                 productivityMonitoring:handleButtonPress(i)
