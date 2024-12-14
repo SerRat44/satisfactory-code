@@ -182,4 +182,6 @@ return function(dependencies)
         -- Ensure cleanup runs when the loop exits
         cleanup()
     end
+
+    return controlModule
 end
