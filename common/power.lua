@@ -48,6 +48,8 @@ function Power:initialize()
         error("Failed to initialize power IO switches")
     end
 
+    powerIO.state = false
+
     -- Get the connectors
     self.mainGridCircuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
     self.factoryCircuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
