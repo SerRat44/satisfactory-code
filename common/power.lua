@@ -126,6 +126,7 @@ function Power:handleIOSwitchEvent(source)
         print("Remote control switch triggered, state:", source.state)
         self.remoteControl = source.state
         self:updateIOColors()
+        powerIO.state = false
         powerIO.enabled = not self.remoteControl
         batteryIO.enabled = not self.remoteControl
     end
