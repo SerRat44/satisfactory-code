@@ -59,7 +59,7 @@ return function(dependencies)
             -- Initialize gauge
             local gauge = getModuleIfExists(self.panel, x, y, panelNum)
             if gauge then
-                self.modules.flow.gauges[type][i] = gauge
+                self.modules.flow.liquids.gauges[type][i] = gauge
             end
 
             -- Initialize display
