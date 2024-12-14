@@ -1,7 +1,6 @@
 -- turbofuel-plant/common/flow_monitoring.lua
 
 local FlowMonitoring = {
-    display = nil,
     valves = {},
     networkCard = nil
 }
