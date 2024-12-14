@@ -1,4 +1,4 @@
--- turbofuel-plant/heavy-oil/power.lua
+-- programs/powerControl.lua
 
 local Power = {
     power_switch = nil,

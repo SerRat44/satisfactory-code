@@ -1,4 +1,4 @@
--- turbofuel-plant/common/flow_monitoring.lua
+-- programs/flow_monitoring.lua
 
 return function(dependencies)
     local FlowMonitoring = {

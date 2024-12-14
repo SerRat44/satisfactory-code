@@ -1,4 +1,4 @@
--- turbofuel-plant/common/productivity_monitoring.lua
+-- programs/machine_control.lua
 
 local ProductivityMonitoring = {
     machines = {},
