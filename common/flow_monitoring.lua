@@ -62,8 +62,8 @@ function FlowMonitoring:updateValveFlowDisplays()
         end
 
         -- Update total display
-        if self.display.flow.displays["total_" .. type:lower()] then
-            self.display.flow.displays["total_" .. type:lower()]:setText(self.utils:formatValveFlowDisplay(totals[type]))
+        if self.display.flow.displays["total_" .. type] then
+            self.display.flow.displays["total_" .. type]:setText(self.utils:formatValveFlowDisplay(totals[type]))
         end
     end
 end
