@@ -14,7 +14,6 @@ function ProductivityMonitoring:new(dependencies)
     instance.colors = dependencies.colors
     instance.utils = dependencies.utils
     instance.config = dependencies.config
-    instance.machines = {}
 
     -- Initialize network card
     instance.networkCard = computer.getPCIDevices(classes.NetworkCard)[1]
