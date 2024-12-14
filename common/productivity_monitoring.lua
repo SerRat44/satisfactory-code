@@ -181,10 +181,10 @@ end
 
 function ProductivityMonitoring:updateAllDisplays()
     for i = 1, #self.machines do
-        self:updateButtonColor(i)
+        self:updateButton(i)
         self:updateGauge(i)
-        self:updateProductivityIndicator()
     end
+    self:updateProductivityIndicator()
 end
 
 function ProductivityMonitoring:broadcastMachineStatus()
