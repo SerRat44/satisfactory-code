@@ -124,7 +124,7 @@ return function(dependencies)
         -- Initialize total display if needed
         if count > 1 then
             local totalDisplayX = startX + 1
-            local totalDisplayY = startY - y
+            local totalDisplayY = startY + y
 
             local total_display = getModuleIfExists(self.panel, totalDisplayX, totalDisplayY, panelNum)
             if total_display then
