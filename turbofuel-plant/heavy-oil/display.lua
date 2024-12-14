@@ -177,7 +177,8 @@ return function(dependencies)
         self.modules.power.switches.MAIN = self.panel:getModule(2, 0, 2)
         self.modules.power.switches.BATTERY = self.panel:getModule(6, 0, 2)
 
-        self.modules.power.switches.REMOTE_CONTROL = self.panel:getModule(10, 0, 2)
+        self.modules.power.switches.REMOTE_CONTROL = self.panel:getModule(9, 0, 2)
+        self.modules.power.switches.Lights = self.panel:getModule(10, 0, 2)
 
         -- Initialize power indicators
         self.modules.power.indicators.MAIN = self.panel:getModule(0, 1, 2)
