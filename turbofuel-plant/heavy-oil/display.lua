@@ -93,7 +93,7 @@ return function(dependencies)
         self.modules.flow.knobs[type] = self.modules.flow.knobs[type] or {}
 
         local x = startX
-        for i = 1, count do
+        for i = 0, count do
             -- Initialize gauge
             local gauge = getModuleIfExists(self.panel, startX, startY, panelNum)
             if gauge then
