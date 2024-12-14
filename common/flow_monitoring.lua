@@ -84,7 +84,7 @@ end
 
 function FlowMonitoring:update()
     self:updateValveFlowDisplays()
-    self:updateItemFlowDisplays()
+    --self:updateItemFlowDisplays()
     self:broadcastFlowStatus()
 end
 
