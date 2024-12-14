@@ -37,7 +37,6 @@ function ProductivityMonitoring:initialize()
         local machine = component.proxy(id)
         if machine then
             self.machines[i] = machine
-            print("Machine " .. i .. " initialized")
         else
             print("Warning: Failed to initialize machine " .. i)
         end
@@ -47,14 +46,14 @@ function ProductivityMonitoring:initialize()
     if self.display and self.display.factory then
         for i, button in ipairs(self.display.factory.buttons) do
             if button then
-                print("Setting up listener for button " .. i)
                 event.listen(button)
+            else
+                print("Warning: Button " .. i .. " not found")
             end
         end
 
         -- Initialize emergency stop
         if self.display.factory.emergency_stop then
-            print("Setting up emergency stop listener")
             event.listen(self.display.factory.emergency_stop)
         end
     end
