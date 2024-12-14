@@ -1,16 +1,14 @@
 -- turbofuel-plant/heavy-oil/control.lua
 return function(programs)
-    local flowMonitoring = programs.flowMonitoring
-    local machineControl = programs.machineControl
-    local powerControl = programs.powerControl
-
-    for index, value in ipairs(programs) do
-        print(index, value)
+    for _, program in ipairs(programs) do
+        Control:addProgram(program)
     end
 
     local Control = {
         programs = {}
     }
+
+    local networkCard = nil
 
     -- Add a program to be managed
     function Control:addProgram(program)
@@ -44,16 +42,14 @@ return function(programs)
             error("Network card not found!")
         end
 
-        -- Initialize components
+        -- Initialize programs
         debug("Initializing programs...")
-        powerControl:initialize()
-        flowMonitoring:initialize()
-        machineControl:initialize()
+        for _, program in ipairs(programs) do
+            if program.initialize then
+                program:initialize()
+            end
+        end
 
-        -- Add programs to be managed
-        Control:addProgram(machineControl)
-        Control:addProgram(flowMonitoring)
-        Control:addProgram(powerControl)
 
         networkCard:open(101)
         event.listen(networkCard)
