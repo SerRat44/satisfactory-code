@@ -151,7 +151,7 @@ return function(dependencies)
 
         -- Initialize other factory modules
         self.modules.factory.emergency_stop = self.panel:getModule(10, 10, 0)
-        self.modules.factory.health_indicator = self.panel:getModule(1, 10, 0)
+        self.modules.factory.health_indicator = self.panel:getModule(2, 10, 0)
         self.modules.factory.productivity_display = self.panel:getModule(2, 9, 0)
     end
 
