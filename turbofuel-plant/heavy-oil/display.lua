@@ -1,4 +1,3 @@
--- turbofuel-plant/heavy-oil/display.lua
 return function(dependencies)
     local colors = dependencies.colors
     local config = dependencies.config
@@ -6,56 +5,9 @@ return function(dependencies)
     local Display = {
         panel = nil,
         modules = {
-            factory = {
-                buttons = {},
-                gauges = {},
-                emergency_stop = nil,
-                health_indicator = nil,
-                productivity_display = nil
-            },
-            power = {
-                switches = {
-                    MAIN = nil,
-                    BATTERY = nil
-                },
-                indicators = {
-                    MAIN = nil,
-                    MAIN_SWITCH = nil,
-                    FACTORY = nil,
-                    BATTERY_SWITCH = nil,
-                    BATTERY = nil
-                },
-                BATTERY = {
-                    REMAINING_TIME = nil,
-                    ON_BATTERIES = nil,
-                    CHARGING = nil,
-                    PERCENTAGE = nil,
-                    MWH = nil
-                },
-                POWER_DISPLAYS = {
-                    MAIN_PRODUCED = nil,
-                    MAIN_USED = nil,
-                    FACTORY_USED = nil
-                }
-            },
-            flow = {
-                gauges = {
-                    crude = {},
-                    heavy = {}
-                },
-                displays = {
-                    crude = {},
-                    heavy = {},
-                    polymer = nil,
-                    total_crude_in = nil,
-                    total_heavy_out = nil,
-                    total_polymer = nil
-                },
-                knobs = {
-                    crude = {},
-                    heavy = {}
-                }
-            }
+            factory = {},
+            power = {},
+            flow = {}
         }
     }
 
@@ -68,6 +20,10 @@ return function(dependencies)
     end
 
     function Display:initializeMachineRow(startX, startY, panelNum, count)
+        -- Create arrays if they don't exist
+        self.modules.factory.buttons = self.modules.factory.buttons or {}
+        self.modules.factory.gauges = self.modules.factory.gauges or {}
+
         for i = 0, count - 1 do
             local buttonIndex = #self.modules.factory.buttons + 1
             local x = startX + i
@@ -87,7 +43,10 @@ return function(dependencies)
     end
 
     function Display:initializeValveFlowBlock(startX, startY, panelNum, type, count)
-        -- Ensure arrays exist for this type
+        -- Create tables if they don't exist
+        self.modules.flow.gauges = self.modules.flow.gauges or {}
+        self.modules.flow.displays = self.modules.flow.displays or {}
+
         self.modules.flow.gauges[type] = self.modules.flow.gauges[type] or {}
         self.modules.flow.displays[type] = self.modules.flow.displays[type] or {}
 
@@ -111,7 +70,6 @@ return function(dependencies)
             y = y - 3
         end
 
-        -- Initialize total display if needed
         if count > 1 then
             local totalDisplayX = startX + 1
             local totalDisplayY = y + 1
@@ -125,12 +83,15 @@ return function(dependencies)
     end
 
     function Display:initializeItemFlowBlock(startX, startY, panelNum, type)
+        -- Create tables if they don't exist
+        self.modules.flow.gauges = self.modules.flow.gauges or {}
+        self.modules.flow.displays = self.modules.flow.displays or {}
+
         -- Initialize gauge
         local gauge = getModuleIfExists(self.panel, startX, startY, panelNum)
         if gauge then
             gauge.limit = 1
             gauge.percent = 0
-            updateGaugeColor(gauge)
             self.modules.flow.gauges[type] = gauge
         end
 
@@ -165,12 +126,17 @@ return function(dependencies)
     end
 
     function Display:initializePowerModules()
+        -- Create necessary tables
+        self.modules.power.switches = {}
+        self.modules.power.indicators = {}
+        self.modules.power.BATTERY = {}
+        self.modules.power.POWER_DISPLAYS = {}
+
         -- Initialize power switches
         self.modules.power.switches.MAIN = self.panel:getModule(2, 0, 2)
         self.modules.power.switches.BATTERY = self.panel:getModule(6, 0, 2)
-
         self.modules.power.switches.REMOTE_CONTROL = self.panel:getModule(9, 0, 2)
-        self.modules.power.switches.Lights = self.panel:getModule(10, 0, 2)
+        self.modules.power.switches.LIGHTS = self.panel:getModule(10, 0, 2)
 
         -- Initialize power indicators
         self.modules.power.indicators.MAIN = self.panel:getModule(0, 1, 2)
@@ -193,18 +159,14 @@ return function(dependencies)
     end
 
     function Display:new(display_panel)
-        print("Creating new display instance...")
         if not display_panel then
             error("Display panel is required")
         end
 
         -- Test the panel immediately
-        print("Testing panel in new()...")
         local success = pcall(function()
             local test_module = display_panel:getModule(0, 0, 0)
-            print("Test module retrieved:", test_module ~= nil)
         end)
-        print("Panel test result:", success)
 
         if not success then
             error("Display panel does not support getModule method")
@@ -218,14 +180,6 @@ return function(dependencies)
     end
 
     function Display:initialize()
-        print("Starting display initialization...")
-        -- Test panel at start of initialize
-        local test = pcall(function()
-            local module = self.panel:getModule(0, 0, 0)
-            print("Initialize test module:", module ~= nil)
-        end)
-        print("Initialize panel test:", test)
-
         -- Initialize all module types
         self:initializeFactoryModules()
         self:initializeFlowModules()

@@ -5,7 +5,8 @@ local Power = {
     battery_switch = nil,
     light_switch = nil,
     display = nil,
-    networkCard = nil
+    networkCard = nil,
+    remoteControl = false
 }
 
 function Power:new(dependencies)
@@ -26,13 +27,23 @@ function Power:new(dependencies)
 end
 
 function Power:initialize()
-    -- Initialize switches
+    -- Initialize power switches
     self.power_switch = component.proxy(self.config.POWER.POWER_SWITCH)
     self.battery_switch = component.proxy(self.config.POWER.BATTERY_SWITCH)
     self.light_switch = component.proxy(self.config.POWER.LIGHT_SWITCH)
 
-    if not self.power_switch or not self.battery_switch then
+    if not self.power_switch or not self.battery_switch or not self.light_switch then
         error("Failed to initialize power switches")
+    end
+
+    -- Initialize IO switches
+    local powerIO = self.display.power.switches.MAIN
+    local batteryIO = self.display.power.switches.BATTERY
+    local lightIO = self.display.power.switches.LIGHTS
+    local remoteIO = self.display.power.switches.REMOTE_CONTROL
+
+    if not powerIO or not batteryIO or not lightIO or not remoteIO then
+        error("Failed to initialize power IO switches")
     end
 
     -- Get the connectors
@@ -40,24 +51,24 @@ function Power:initialize()
     local factoryConnector = self.power_switch:getPowerConnectors()[1]
     local batteryConnector = self.battery_switch:getPowerConnectors()[1]
 
+    if not mainGridConnector or not factoryConnector or not batteryConnector then
+        error("Failed to initialize power connectors")
+    end
+
     -- Set up event listening for power fuses
     event.listen(mainGridConnector)
     event.listen(factoryConnector)
     event.listen(batteryConnector)
 
-    -- Set initial states for switches and listen for events
-    local powerIO = self.display.power.switches.MAIN
-    local batteryIO = self.display.power.switches.BATTERY
+    -- Set up event listening for IO switches
+    event.listen(powerIO)
+    event.listen(batteryIO)
+    event.listen(lightIO)
+    event.listen(remoteIO)
 
-    if powerIO then
-        self.power_switch:setIsSwitchOn(powerIO.state)
-        event.listen(powerIO)
-    end
-
-    if batteryIO then
-        self.battery_switch:setIsSwitchOn(batteryIO.state)
-        event.listen(batteryIO)
-    end
+    self.power_switch:setIsSwitchOn(powerIO.state)
+    self.battery_switch:setIsSwitchOn(batteryIO.state)
+    self.light_switch.isLightEnabled = lightIO.state
 
     -- Update initial power indicators
     self:updatePowerIndicators()
@@ -91,28 +102,52 @@ function Power:handlePowerFuseEvent(source)
 end
 
 function Power:handleSwitchEvent(source)
+    local powerIO = self.display.power.switches.MAIN
+    local batteryIO = self.display.power.switches.BATTERY
+    local lightIO = self.display.power.switches.LIGHTS
+    local remoteIO = self.display.power.switches.REMOTE_CONTROL
+
     print("Handling switch event from source:", source)
 
-    -- Check if it's a switch module
-    if not source then return false end
-
     -- Handle Main Power Switch
-    if source == self.display.power.switches.MAIN then
+    if source == powerIO then
         print("Main power switch triggered, state:", source.state)
         self.power_switch:setIsSwitchOn(source.state)
         self:updatePowerIndicators()
-        return true
     end
 
     -- Handle Battery Switch
-    if source == self.display.power.switches.BATTERY then
+    if source == batteryIO then
         print("Battery switch triggered, state:", source.state)
         self.battery_switch:setIsSwitchOn(source.state)
         self:updatePowerIndicators()
-        return true
     end
 
-    return false
+    if source == lightIO then
+        print("Light switch triggered, state:", source.state)
+        self.light_switch.isLightEnabled = source.state
+    end
+
+    if source == remoteIO then
+        print("Remote control switch triggered, state:", source.state)
+        self.remoteControl = source.state
+        self:updateIOColors()
+        powerIO.enabled = not self.remoteControl
+        batteryIO.enabled = not self.remoteControl
+    end
+end
+
+function Power:updateIOColors()
+    local powerIO = self.display.power.switches.MAIN
+    local batteryIO = self.display.power.switches.BATTERY
+
+    if self.remoteControl then
+        self.utils:setComponentColor(powerIO, self.colors.COLOR.GREEN, self.colors.EMIT.BUTTON)
+        self.utils:setComponentColor(batteryIO, self.colors.COLOR.GREEN, self.colors.EMIT.BUTTON)
+    else
+        self.utils:setComponentColor(powerIO, self.colors.COLOR.RED, self.colors.EMIT.BUTTON)
+        self.utils:setComponentColor(batteryIO, self.colors.COLOR.RED, self.colors.EMIT.BUTTON)
+    end
 end
 
 function Power:updatePowerIndicators()
@@ -275,6 +310,7 @@ end
 
 function Power:update()
     self:updatePowerDisplays()
+    self:updateIOColors()
     self:processEvents()
 end
 
