@@ -8,8 +8,6 @@ return function(programs)
         programs = {}
     }
 
-    local networkCard = nil
-
     -- Add a program to be managed
     function Control:addProgram(program)
         table.insert(self.programs, program)
@@ -36,12 +34,6 @@ return function(programs)
     end
 
     function Control:start()
-        -- Get network card
-        networkCard = computer.getPCIDevices(classes.NetworkCard)[1]
-        if not networkCard then
-            error("Network card not found!")
-        end
-
         -- Initialize programs
         debug("Initializing programs...")
         for _, program in ipairs(programs) do
@@ -50,11 +42,7 @@ return function(programs)
             end
         end
 
-
-        networkCard:open(101)
-        event.listen(networkCard)
-
-        print("Starting main control loop...")
+        debug("Starting main control loop...")
         while true do
             Control:handleEvents() -- Handle events first
 
