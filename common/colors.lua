@@ -6,7 +6,7 @@ return {
         GREEN = { 0, 255, 0 },
         BLUE = { 0, 0, 255 },
         YELLOW = { 255, 255, 0 },
-        ORANGE = { 255, 40, 0 },
+        ORANGE = { 255, 30, 0 },
     },
     EMIT = {
         INDICATOR = 5,
