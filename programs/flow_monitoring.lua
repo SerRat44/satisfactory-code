@@ -1,6 +1,11 @@
 -- programs/flow_monitoring.lua
 
 return function(dependencies)
+    local constants = dependencies.constants
+    local config = dependencies.config
+    local displayPanel = dependencies.displayPanel
+    local utils = dependencies.utils
+
     local FlowMonitoring = {
         valves = {},
         networkCard = nil,
@@ -8,8 +13,8 @@ return function(dependencies)
     }
 
     function FlowMonitoring:initialize()
-        -- Initialize valves based on config
-        for type, valveIds in pairs(self.config.VALVES) do
+        debug("Initializing valves...")
+        for type, valveIds in pairs(config.VALVES) do
             self.valves[type] = {}
             for i, id in ipairs(valveIds) do
                 local valve = component.proxy(id)
@@ -19,8 +24,9 @@ return function(dependencies)
                 self.valves[type][i] = valve
             end
         end
-        print("Initializing machines...")
-        for i, id in ipairs(self.config.REFINERY_IDS) do
+
+        debug("Initializing machines...")
+        for i, id in ipairs(config.REFINERY_IDS) do
             local machine = component.proxy(id)
             if machine then
                 self.machines[i] = machine
@@ -41,7 +47,7 @@ return function(dependencies)
                 local displayIndex = i
                 totals[type] = totals[type] + (valve.flow or 0)
 
-                if self.display.flow.liquids.gauges[type] and self.display.flow.liquids.gauges[type][displayIndex] then
+                if displayPanel.flow.liquids.gauges[type] and self.display.flow.liquids.gauges[type][displayIndex] then
                     local gauge = self.display.flow.liquids.gauges[type][displayIndex]
                     gauge.limit = valve.userFlowLimit
                     gauge.percent = valve.flow / valve.userFlowLimit

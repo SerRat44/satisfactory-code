@@ -1,12 +1,12 @@
 -- turbofuel-plant/heavy-oil/control.lua
-return function(dependencies)
-    local constants = dependencies.constants
-    local utils = dependencies.utils
-    local config = dependencies.config
-    local displayPanel = dependencies.displayPanel
-    local flowMonitoring = dependencies.flowMonitoring
-    local machineControl = dependencies.machineControl
-    local powerControl = dependencies.powerControl
+return function(programs)
+    local flowMonitoring = programs.flowMonitoring
+    local machineControl = programs.machineControl
+    local powerControl = programs.powerControl
+
+    for index, value in ipairs(myTable) do
+        print(index, value)
+    end
 
     local Control = {
         programs = {}
@@ -43,15 +43,6 @@ return function(dependencies)
         if not networkCard then
             error("Network card not found!")
         end
-
-        -- Create module instances
-        local modulesDependencies = {
-            colors = colors,
-            utils = utils,
-            config = config,
-            display = Display
-        }
-
 
         -- Initialize components
         debug("Initializing programs...")
