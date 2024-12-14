@@ -92,10 +92,10 @@ return function(dependencies)
         self.modules.flow.displays[type] = self.modules.flow.displays[type] or {}
         self.modules.flow.knobs[type] = self.modules.flow.knobs[type] or {}
 
-        local y = y
+        local y = startY
         for i = 0, count do
             -- Initialize gauge
-            local gauge = getModuleIfExists(self.panel, startX, startY, panelNum)
+            local gauge = getModuleIfExists(self.panel, startX, y, panelNum)
             if gauge then
                 gauge.limit = 1
                 gauge.percent = 0
@@ -103,7 +103,7 @@ return function(dependencies)
             end
 
             -- Initialize display
-            local display = getModuleIfExists(self.panel, startX + 2, startY + 1, panelNum)
+            local display = getModuleIfExists(self.panel, startX + 2, y + 1, panelNum)
             if display then
                 display:setText("0.0 m³/s")
                 self.modules.flow.displays[type][i] = display
