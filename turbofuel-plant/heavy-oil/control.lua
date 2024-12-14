@@ -52,6 +52,16 @@ return function(dependencies)
         running = false
     end
 
+    local function initializeEventHandling()
+        -- Listen for network events
+        if networkCard then
+            networkCard:open(101)
+            event.listen(networkCard)
+        end
+        -- Listen for component events
+        event.listen(component)
+    end
+
     -- Main control loop function
     controlModule.main = function()
         print("Initializing modules...")
@@ -104,8 +114,6 @@ return function(dependencies)
 
         -- Initialize all modules
         power:initialize()
-
-
         flowMonitoring:initialize()
 
         -- Initialize productivity monitoring with machine IDs
@@ -116,89 +124,62 @@ return function(dependencies)
         productivityMonitoring:initialize(monitoringConfig)
 
         print("Network card found. Opening port 101...")
-        networkCard:open(101)
-        event.listen(networkCard)
+        initializeEventHandling()
 
         print("Starting main control loop...")
         while running do
-            local success, e, s, sender, port, type, data = pcall(function()
-                return event.pull(config.UPDATE_INTERVAL)
-            end)
+            local e, s, sender, port, type, data = event.pull(config.UPDATE_INTERVAL)
 
-            if not success then
-                print("Error during event pull: " .. tostring(e))
-                print("Attempting to reinitialize power module...")
-                pcall(function()
-                    if power then
-                        power:cleanup() -- Clean up before reinitializing
-                        power:initialize()
-                        print("Power module reinitialized")
-                    end
-                end)
-                goto continue
-            end
-
-            -- Process events
-            if e == "ChangeState" then
-                print("Processing ChangeState event...")
-                if s then
-                    print("Source:", s)
-                    local handled = power:handleSwitchEvent(s)
-                    if not handled then
-                        print("WARNING: Unhandled switch event")
-                    end
-                else
-                    print("WARNING: Invalid switch event - no source")
-                end
-            elseif e == "PowerFuseChanged" then
-                print("Processing PowerFuseChanged event...")
-                if s then
-                    power:handlePowerFuseEvent(s)
-                end
-            elseif e == "Trigger" then
-                print("Processing Trigger event...")
-                if s == modules.factory.emergency_stop then
-                    print("Emergency stop triggered")
-                    productivityMonitoring:handleEmergencyStop()
-                else
-                    for i, button in ipairs(modules.factory.buttons) do
-                        if s == button then
-                            print("Factory button", i, "pressed")
-                            productivityMonitoring:handleButtonPress(i)
-                            break
+            if e then
+                if e == "NetworkMessage" then
+                    print("Processing NetworkMessage:", type)
+                    handleNetworkMessage(type, data)
+                elseif e == "Trigger" then
+                    print("Processing Trigger event from source:", s)
+                    -- Handle button presses
+                    if productivityMonitoring and s == modules.factory.emergency_stop then
+                        print("Emergency stop triggered")
+                        productivityMonitoring:handleEmergencyStop()
+                    else
+                        -- Check factory buttons
+                        for i, button in ipairs(modules.factory.buttons) do
+                            if s == button then
+                                print("Factory button", i, "pressed")
+                                productivityMonitoring:handleButtonPress(i)
+                                break
+                            end
                         end
                     end
+                elseif e == "ChangeState" then
+                    print("Processing ChangeState event from source:", s)
+                    if power then
+                        power:handleSwitchEvent(s)
+                    end
+                elseif e == "PowerFuseChanged" then
+                    print("Processing PowerFuseChanged event from source:", s)
+                    if power then
+                        power:handlePowerFuseEvent(s)
+                    end
+                elseif e == "ComponentConnectionChanged" then
+                    print("Component connection changed:", s)
+                    -- Handle component disconnections/reconnections if needed
                 end
-            elseif e == "NetworkMessage" then
-                print("Processing NetworkMessage:", type)
-                handleNetworkMessage(type, data)
             end
 
-            -- Regular updates with error handling
-            local updateSuccess, updateError = pcall(function()
-                -- Update all monitoring systems
-                productivityMonitoring:update()
-                flowMonitoring:update()
-                power:update()
+            -- Regular updates
+            if power then power:update() end
+            if flowMonitoring then flowMonitoring:update() end
+            if productivityMonitoring then productivityMonitoring:update() end
 
-                -- Broadcast status if data collection is active
-                if dataCollectionActive then
-                    productivityMonitoring:broadcastMachineStatus()
-                    flowMonitoring:broadcastFlowStatus()
-                    power:broadcastPowerStatus()
-                end
-            end)
-
-            if not updateSuccess then
-                print("Error during updates: " .. tostring(updateError))
+            -- Broadcast status if data collection is active
+            if dataCollectionActive then
+                if productivityMonitoring then productivityMonitoring:broadcastMachineStatus() end
+                if flowMonitoring then flowMonitoring:broadcastFlowStatus() end
+                if power then power:broadcastPowerStatus() end
             end
-
-            ::continue::
         end
 
         -- Ensure cleanup runs when the loop exits
         cleanup()
     end
-
-    return controlModule
 end

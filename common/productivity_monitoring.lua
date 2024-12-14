@@ -40,10 +40,21 @@ function ProductivityMonitoring:initialize()
         self.machines[i] = component.proxy(id)
     end
 
-    -- Initialize emergency stop if it exists
-    if self.display.factory and self.display.factory.emergency_stop then
-        event.listen(self.display.factory.emergency_stop)
-        self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT.OFF)
+    -- Initialize machine buttons and listen for events
+    if self.display and self.display.factory then
+        -- Initialize and listen to all machine buttons
+        for i, button in ipairs(self.display.factory.buttons) do
+            if button then
+                event.listen(button)
+            end
+        end
+
+        -- Initialize emergency stop if it exists
+        if self.display.factory.emergency_stop then
+            event.listen(self.display.factory.emergency_stop)
+            self.utils:setComponentColor(self.display.factory.emergency_stop, self.colors.COLOR.RED, self.colors.EMIT
+                .OFF)
+        end
     end
 end
 
@@ -82,37 +93,31 @@ function ProductivityMonitoring:handleButtonPress(button_id)
     end
 end
 
-function ProductivityMonitoring:updateProductivityHistory()
-    self.current_productivity = self.utils:getAvgProductivity(self.machines)
-    table.insert(self.productivity_history, self.current_productivity)
-
+function ProductivityMonitoring:updateDisplays()
     -- Update gauges and button colors together
     for i, machine in ipairs(self.machines) do
+        local gauge = self.display.factory.gauges[i]
+        gauge.limit = 1
+
         -- Update gauge if it exists
         if self.display.factory.gauges[i] then
             if machine and not machine.standby then
                 local prod = machine.productivity
-                local gauge = self.display.factory.gauges[i]
-                gauge.limit = 1
+
+
                 gauge.percent = prod
                 self.utils:updateGaugeColor(gauge)
             else
-                self.display.factory.gauges[i].percent = 0
+                gauge.percent = 0
                 self.utils:setComponentColor(self.display.factory.gauges[i], self.colors.COLOR.RED,
                     self.colors.EMIT.OFF)
             end
         end
 
-        -- Update button
         self:updateButtonColor(i)
     end
 
-    if #self.productivity_history > self.config.HISTORY_LENGTH then
-        table.remove(self.productivity_history, 1)
-    end
-
     self:updateProductivityIndicator()
-    return self.current_productivity
 end
 
 function ProductivityMonitoring:updateProductivityIndicator()

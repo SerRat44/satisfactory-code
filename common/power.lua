@@ -60,43 +60,22 @@ function Power:initialize()
     -- Set initial states for switches
     if self.display and self.display.power and self.display.power.switches then
         if self.display.power.switches.MAIN then
-            self.display.power.switches.MAIN.state = self.power_switch.isSwitchOn
-        end
-        if self.display.power.switches.BATTERY then
-            self.display.power.switches.BATTERY.state = self.battery_switch.isSwitchOn
-        end
-    end
-
-    print("Initializing power controls...")
-
-    -- Register event listeners with proper error handling
-    local success = pcall(function()
-        if self.display.power.switches.MAIN then
+            self.power_switch:setIsSwitchOn(self.display.power.switches.MAIN.state)
             event.listen(self.display.power.switches.MAIN)
         end
         if self.display.power.switches.BATTERY then
+            self.battery_switch.setIsSwitchOn(self.display.power.switches.BATTERY.state)
             event.listen(self.display.power.switches.BATTERY)
         end
-        event.listen(self.power_switch)
-        event.listen(self.battery_switch)
-    end)
-
-    if not success then
-        print("Warning: Failed to register switch event listeners. Retrying...")
-        computer.millis(100)
-        self:cleanup() -- Clear any partial registrations
-        -- Try again
-        if self.display.power.switches.MAIN then
-            event.listen(self.display.power.switches.MAIN)
-        end
-        if self.display.power.switches.BATTERY then
-            event.listen(self.display.power.switches.BATTERY)
-        end
-        event.listen(self.power_switch)
-        event.listen(self.battery_switch)
     end
 
-    print("Power initialization complete.")
+    -- Set up event listening for power fuses
+    event.listen(self.power_switch:getPowerConnectors()[1])   -- Factory circuit
+    event.listen(self.power_switch:getPowerConnectors()[2])   -- Main grid circuit
+    event.listen(self.battery_switch:getPowerConnectors()[1]) -- Battery circuit
+
+    -- Update initial power indicators
+    self:updatePowerIndicators()
 end
 
 function Power:handlePowerFuseEvent(source)
