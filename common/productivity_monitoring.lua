@@ -196,7 +196,6 @@ end
 
 function ProductivityMonitoring:update()
     self:updateProductivityHistory()
-    self:broadcastMachineStatus()
 end
 
 function ProductivityMonitoring:cleanup()

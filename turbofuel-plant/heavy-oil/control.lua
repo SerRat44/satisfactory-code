@@ -22,47 +22,89 @@ return function(dependencies)
     -- Create the control module table
     local controlModule = {}
 
-    local function handleNetworkMessage(type, data)
-        if type == "collection" then
-            dataCollectionActive = data
-        else
-            power:handleNetworkMessage(type, data)
-        end
-    end
+    -- Event handler mapping
+    local eventHandlers = {
+        NetworkMessage = function(_, _, _, _, type, data)
+            if type == "collection" then
+                dataCollectionActive = data
+            else
+                power:handleNetworkMessage(type, data)
+            end
+        end,
 
-    -- Cleanup function to handle proper shutdown
+        Trigger = function(_, source)
+            -- Handle emergency stop
+            if source == modules.factory.emergency_stop then
+                productivityMonitoring:handleEmergencyStop()
+                return
+            end
+
+            -- Handle factory buttons
+            for i, button in ipairs(modules.factory.buttons) do
+                if source == button then
+                    productivityMonitoring:handleButtonPress(i)
+                    return
+                end
+            end
+
+            -- Handle flow control knobs
+            if modules.flow and modules.flow.knobs then
+                for type, knobs in pairs(modules.flow.knobs) do
+                    for i, knob in ipairs(knobs) do
+                        if source == knob then
+                            flowMonitoring:handleKnobChange(type, i, knob.value)
+                            return
+                        end
+                    end
+                end
+            end
+        end,
+
+        ChangeState = function(_, source)
+            if power then
+                power:handleSwitchEvent(source)
+            end
+        end,
+
+        PowerFuseChanged = function(_, source)
+            if power then
+                power:handlePowerFuseEvent(source)
+            end
+        end,
+
+        ComponentConnectionChanged = function(_, source)
+            print("Component connection changed:", source)
+            -- Re-initialize relevant components if needed
+            if power then power:initialize() end
+            if flowMonitoring then flowMonitoring:initialize() end
+            if productivityMonitoring then productivityMonitoring:initialize() end
+        end
+    }
+
+    -- Cleanup function
     local function cleanup()
         print("Cleaning up control module...")
-        -- Clear event listeners
         if networkCard then
             event.clear(networkCard)
         end
-        -- Clean up modules
-        if power then
-            power:cleanup()
-        end
-        if flowMonitoring then
-            flowMonitoring:cleanup()
-        end
-        if productivityMonitoring then
-            productivityMonitoring:cleanup()
-        end
-        -- Clear all remaining events
+        if power then power:cleanup() end
+        if flowMonitoring then flowMonitoring:cleanup() end
+        if productivityMonitoring then productivityMonitoring:cleanup() end
         event.clear()
         running = false
     end
 
-    -- Main control loop function
+    -- Main control loop
     controlModule.main = function()
         print("Initializing modules...")
 
-        -- Get the display panel first
+        -- Get the display panel
         local displayPanel = component.proxy(config.COMPONENT_IDS.DISPLAY_PANEL)
         if not displayPanel then
             error("Display panel not found!")
         end
 
-        -- Initialize display with the panel
+        -- Initialize display
         print("Creating display instance...")
         display = Display:new(displayPanel)
         if not display then
@@ -75,85 +117,83 @@ return function(dependencies)
             error("Failed to initialize display modules")
         end
 
-        -- Get network card early
+        -- Get network card
         networkCard = computer.getPCIDevices(classes.NetworkCard)[1]
         if not networkCard then
             error("Network card not found!")
         end
 
-        local baseDependencies = {
-            colors = colors,
-        }
-
-        -- Create module instances with correct dependencies
+        -- Create module instances with dependencies
         local modulesDependencies = {
             colors = colors,
             utils = utils,
             config = config,
-            display = modules -- Pass the initialized display modules
+            display = modules
         }
 
-        -- Create module instances
+        -- Initialize all modules
         productivityMonitoring = ProductivityMonitoring:new(modulesDependencies)
         flowMonitoring = FlowMonitoring:new(modulesDependencies)
         power = Power:new(modulesDependencies)
 
         print("Initializing components...")
-        -- Clear any existing event listeners before initializing
-        event.clear()
+        event.clear() -- Clear existing events before setting up new ones
 
-        -- Initialize all modules
+        -- Initialize modules
         power:initialize()
         flowMonitoring:initialize()
+        productivityMonitoring:initialize()
 
-        -- Initialize productivity monitoring with machine IDs
-        local monitoringConfig = {
-            COMPONENT_IDS = config.COMPONENT_IDS,
-            MACHINE_IDS = config.REFINERY_IDS -- Use existing refinery IDs
-        }
-        productivityMonitoring:initialize(monitoringConfig)
-
-        print("Network card found. Opening port 101...")
+        -- Set up network listening
+        print("Setting up network...")
         networkCard:open(101)
         event.listen(networkCard)
 
+        -- Set up event listeners for all interactive components
+        print("Setting up event listeners...")
+
+        -- Listen to emergency stop
+        if modules.factory.emergency_stop then
+            event.listen(modules.factory.emergency_stop)
+        end
+
+        -- Listen to factory buttons
+        for _, button in ipairs(modules.factory.buttons) do
+            if button then
+                event.listen(button)
+            end
+        end
+
+        -- Listen to power switches
+        if modules.power.switches then
+            for _, switch in pairs(modules.power.switches) do
+                if switch then
+                    event.listen(switch)
+                end
+            end
+        end
+
+        -- Listen to flow control knobs
+        if modules.flow and modules.flow.knobs then
+            for _, knobs in pairs(modules.flow.knobs) do
+                for _, knob in ipairs(knobs) do
+                    if knob then
+                        event.listen(knob)
+                    end
+                end
+            end
+        end
+
         print("Starting main control loop...")
         while running do
-            local e, s, sender, port, type, data = event.pull(config.UPDATE_INTERVAL)
+            -- Handle events
+            local eventData = { event.pull(config.UPDATE_INTERVAL) }
+            local eventType = eventData[1]
 
-            if e then
-                if e == "NetworkMessage" then
-                    print("Processing NetworkMessage:", type)
-                    handleNetworkMessage(type, data)
-                elseif e == "Trigger" then
-                    print("Processing Trigger event from source:", s)
-                    -- Handle button presses
-                    if productivityMonitoring and s == modules.factory.emergency_stop then
-                        print("Emergency stop triggered")
-                        productivityMonitoring:handleEmergencyStop()
-                    else
-                        -- Check factory buttons
-                        for i, button in ipairs(modules.factory.buttons) do
-                            if s == button then
-                                print("Factory button", i, "pressed")
-                                productivityMonitoring:handleButtonPress(i)
-                                break
-                            end
-                        end
-                    end
-                elseif e == "ChangeState" then
-                    print("Processing ChangeState event from source:", s)
-                    if power then
-                        power:handleSwitchEvent(s)
-                    end
-                elseif e == "PowerFuseChanged" then
-                    print("Processing PowerFuseChanged event from source:", s)
-                    if power then
-                        power:handlePowerFuseEvent(s)
-                    end
-                elseif e == "ComponentConnectionChanged" then
-                    print("Component connection changed:", s)
-                    -- Handle component disconnections/reconnections if needed
+            if eventType then
+                local handler = eventHandlers[eventType]
+                if handler then
+                    handler(table.unpack(eventData))
                 end
             end
 
@@ -170,7 +210,6 @@ return function(dependencies)
             end
         end
 
-        -- Ensure cleanup runs when the loop exits
         cleanup()
     end
 

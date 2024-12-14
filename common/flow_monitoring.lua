@@ -75,7 +75,6 @@ end
 
 function FlowMonitoring:update()
     self:updateFlowDisplays()
-    self:broadcastFlowStatus()
 end
 
 function FlowMonitoring:broadcastFlowStatus()

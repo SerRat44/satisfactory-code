@@ -280,7 +280,6 @@ end
 function Power:update()
     while true do
         self:updatePowerDisplays()
-        self:broadcastPowerStatus()
     end
 end
 
