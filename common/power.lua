@@ -142,11 +142,11 @@ function Power:updateIOColors()
     local batteryIO = self.display.power.switches.BATTERY
 
     if self.remoteControl then
-        self.utils:setComponentColor(powerIO, self.colors.COLOR.GREEN, self.colors.EMIT.BUTTON)
-        self.utils:setComponentColor(batteryIO, self.colors.COLOR.GREEN, self.colors.EMIT.BUTTON)
-    else
         self.utils:setComponentColor(powerIO, self.colors.COLOR.RED, self.colors.EMIT.BUTTON)
         self.utils:setComponentColor(batteryIO, self.colors.COLOR.RED, self.colors.EMIT.BUTTON)
+    else
+        self.utils:setComponentColor(powerIO, self.colors.COLOR.GREEN, self.colors.EMIT.BUTTON)
+        self.utils:setComponentColor(batteryIO, self.colors.COLOR.GREEN, self.colors.EMIT.BUTTON)
     end
 end
 
