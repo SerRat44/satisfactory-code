@@ -52,16 +52,6 @@ return function(dependencies)
         running = false
     end
 
-    local function initializeEventHandling()
-        -- Listen for network events
-        if networkCard then
-            networkCard:open(101)
-            event.listen(networkCard)
-        end
-        -- Listen for component events
-        event.listen(component)
-    end
-
     -- Main control loop function
     controlModule.main = function()
         print("Initializing modules...")
@@ -124,7 +114,8 @@ return function(dependencies)
         productivityMonitoring:initialize(monitoringConfig)
 
         print("Network card found. Opening port 101...")
-        initializeEventHandling()
+        networkCard:open(101)
+        event.listen(networkCard)
 
         print("Starting main control loop...")
         while running do
