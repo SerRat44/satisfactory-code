@@ -5,11 +5,6 @@ return function(programs)
     }
 
     for _, program in ipairs(programs) do
-        Control:addProgram(program)
-    end
-
-    -- Add a program to be managed
-    function Control:addProgram(program)
         table.insert(self.programs, program)
     end
 
