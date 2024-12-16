@@ -135,7 +135,7 @@ return function(dependencies)
             self.battery_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
             self.constants.EMIT.INDICATOR)
 
-        self.io_switches.lights.state = self.switches.light_switch.isLightEnabled
+        self.io_switches.lights.state = self.switches.lights.isLightEnabled
     end
 
     function PowerControl:updatePowerDisplays()
