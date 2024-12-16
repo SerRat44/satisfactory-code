@@ -25,7 +25,7 @@ return function(dependencies)
         self.switches.battery = component.proxy(self.config.POWER.BATTERY_SWITCH)
         self.switches.lights = component.proxy(self.config.POWER.LIGHT_SWITCH)
 
-        self.panel = component.proxy(config.PANEL_ID)
+        self.panel = component.proxy(self.config.PANEL_ID)
         if not self.panel then
             error("Failed to initialize panel")
         end
