@@ -18,9 +18,9 @@ return function(dependencies)
             error("Failed to initialize panel")
         end
 
-        self:initializeFlowBlock(self.panel, 0, 0, 1)
-        self:initializeFlowBlock(self.panel, 7, 3, 1)
-        self:initializeFlowBlock(self.panel, 7, 0, 1)
+        self.displayPanel:initializeFlowBlock(self.panel, 0, 0, 1)
+        self.displayPanel:initializeFlowBlock(self.panel, 7, 3, 1)
+        self.displayPanel:initializeFlowBlock(self.panel, 7, 0, 1)
 
         debug("Initializing machines...")
         for i, id in ipairs(self.config.REFINERY_IDS) do
