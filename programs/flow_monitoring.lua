@@ -37,39 +37,41 @@ return function(dependencies)
         end
     end
 
-    function FlowMonitoring:getMaxProductFlow(machine)
+    function FlowMonitoring:getMaxProductsFlow(machine)
         local recipe = machine:getRecipe()
-        local product = recipe:getProducts()[1][1]
         local runsPerMin = 60.0 / recipe.duration
         local potential = machine.potential * machine.productionBoost
+        local flows = {}
 
-        for _, prod in ipairs(recipe:getProducts()) do
+        for i, prod in ipairs(recipe:getProducts()) do
             local itemsPerMin = prod[1].amount * runsPerMin
 
-            if product.type.form == 2 or product.type.form == 3 then
+            if prod.type.form == 2 or prod.type.form == 3 then
                 itemsPerMin = itemsPerMin / 1000
             end
 
             itemsPerMin = itemsPerMin * potential
 
-            print(prod.type.name, itemsPerMin, " / min")
-            return product.name, itemsPerMin
+            flows.item[i] = prod.type.name
+            flows.maxFlow[i] = itemsPerMin
         end
+
+        return flows
     end
 
     function FlowMonitoring:updateItemFlowDisplays()
         for i, block in pairs(self.flow_block) do
-            local item, maxFlow = self:getMaxProductFlow(self.machines[i])
+            local flows = self:getMaxProductFlow(self.machines[i])
 
-            local maxFlow = maxFlow
+            local maxFlow = flows.maxFlow[i]
             local currentFlow = maxFlow * self.machine[i].productivity
 
             block.gauge.limit = maxFlow
             block.gauge.percent = currentFlow
-            self.utils:updateGaugeColor(gauge)
+            self.utils:updateGaugeColor(block.gauge)
 
             self.flow_block.topDisplay:setText(string.format("%.2f", currentFlow))
-            self.flow_block.bottomDisplay:setText(item)
+            self.flow_block.bottomDisplay:setText(flows.item[i])
         end
     end
 
