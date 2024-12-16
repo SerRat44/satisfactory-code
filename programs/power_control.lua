@@ -100,15 +100,15 @@ return function(dependencies)
     function PowerControl:handleIOSwitchEvent(source)
         debug("Handling switch event from source:", source)
 
-        if source == self.switches.MAIN then
+        if source == self.io_switches.factory then
             debug("Main power switch triggered, state:", source.state)
             self.power_switch:setIsSwitchOn(source.state)
             self:updatePowerIndicators()
-        elseif source == self.switches.BATTERY then
+        elseif source == self.io_switches.battery then
             debug("Battery switch triggered, state:", source.state)
             self.battery_switch:setIsSwitchOn(source.state)
             self:updatePowerIndicators()
-        elseif source == self.switches.LIGHTS then
+        elseif source == self.io_switches.lights then
             debug("Light switch triggered, state:", source.state)
             self.light_switch.isLightEnabled = source.state
         end
