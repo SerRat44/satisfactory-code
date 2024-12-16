@@ -54,8 +54,8 @@ return function(dependencies)
         self.power_displays.factory_used = self.panel:getModule(4, 3, 2)
 
         -- Get the connectors
-        self.main_circuit = self.switches.power:getPowerConnectors()[2]:getCircuit()
-        self.factory_circuit = self.switches.power:getPowerConnectors()[1]:getCircuit()
+        self.main_circuit = self.switches.power:getPowerConnectors()[1]:getCircuit()
+        self.factory_circuit = self.switches.power:getPowerConnectors()[2]:getCircuit()
         self.battery_circuit = self.switches.battery:getPowerConnectors()[1]:getCircuit()
 
         -- Set up event listening for power fuses
