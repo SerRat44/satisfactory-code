@@ -119,7 +119,7 @@ return function(dependencies)
             self.main_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
             self.constants.EMIT.INDICATOR)
 
-        self.self.io_switches.factory.state = self.switches.power.isSwitchOn
+        self.io_switches.factory.state = self.switches.power.isSwitchOn
         self.utils:setComponentColor(self.indicators.main_switch,
             self.switches.power.isSwitchOn and self.constants.COLOR.GREEN or self.constants.COLOR.RED,
             self.constants.EMIT.INDICATOR)
