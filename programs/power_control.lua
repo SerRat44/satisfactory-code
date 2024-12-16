@@ -172,17 +172,17 @@ return function(dependencies)
             self.utils:setComponentColor(self.battery.percentage, self.constants.COLOR.YELLOW,
                 self.constants.EMIT.OFF)
         elseif batteryPercent >= 0.25 then
-            self.utils:setComponentColor(self.BATTERY.PERCENTAGE, self.constants.COLOR.ORANGE,
+            self.utils:setComponentColor(self.battery.percentage, self.constants.COLOR.ORANGE,
                 self.constants.EMIT.OFF)
         else
-            self.utils:setComponentColor(self.BATTERY.PERCENTAGE, self.constants.COLOR.RED,
+            self.utils:setComponentColor(self.battery.percentage, self.constants.COLOR.RED,
                 self.constants.EMIT.OFF)
         end
 
-        self.utils:setComponentColor(self.display.power.BATTERY.CHARGING, self.colors.COLOR.GREEN,
+        self.utils:setComponentColor(self.battery.charging, self.colors.COLOR.GREEN,
             self.battery_circuit.batteryTimeUntilFull > 0 and self.colors.EMIT.INDICATOR or self.colors.EMIT.OFF)
 
-        self.utils:setComponentColor(self.display.power.BATTERY.ON_BATTERIES, self.colors.COLOR.GREEN,
+        self.utils:setComponentColor(self.battery.on_batteries, self.colors.COLOR.GREEN,
             self.battery_circuit.batteryTimeUntilEmpty > 0 and self.colors.EMIT.INDICATOR, self.colors.EMIT.OFF)
     end
 
