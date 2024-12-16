@@ -2,7 +2,7 @@
 
 return function(dependencies)
     local Utils = {
-        colors = nil
+        constants = dependencies.constants,
     }
 
     function Utils:setComponentColor(component, color, emit)
@@ -40,17 +40,17 @@ return function(dependencies)
 
     function Utils:updateGaugeColor(gauge)
         if gauge.limit <= 0 then
-            self:setComponentColor(gauge, self.colors.COLOR.RED, self.colors.EMIT.OFF)
+            self:setComponentColor(gauge, self.constants.COLOR.RED, self.constants.EMIT.OFF)
         else
             local ratio = gauge.percent / gauge.limit
             if ratio >= 0.95 then
-                self:setComponentColor(gauge, self.colors.COLOR.GREEN, self.colors.EMIT.OFF)
+                self:setComponentColor(gauge, self.constants.COLOR.GREEN, self.constants.EMIT.OFF)
             elseif ratio >= 0.5 then
-                self:setComponentColor(gauge, self.colors.COLOR.YELLOW, self.colors.EMIT.OFF)
+                self:setComponentColor(gauge, self.constants.COLOR.YELLOW, self.constants.EMIT.OFF)
             elseif ratio > 0 then
-                self:setComponentColor(gauge, self.colors.COLOR.ORANGE, self.colors.EMIT.OFF)
+                self:setComponentColor(gauge, self.constants.COLOR.ORANGE, self.constants.EMIT.OFF)
             elseif ratio <= 0 then
-                self:setComponentColor(gauge, self.colors.COLOR.RED, self.colors.EMIT.OFF)
+                self:setComponentColor(gauge, self.constants.COLOR.RED, self.constants.EMIT.OFF)
             end
         end
     end
