@@ -119,7 +119,7 @@ return function(dependencies)
             self.main_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
             self.constants.EMIT.INDICATOR)
 
-        self.self.switches.factory.state = self.switches.power.isSwitchOn
+        self.self.io_switches.factory.state = self.switches.power.isSwitchOn
         self.utils:setComponentColor(self.indicators.main_switch,
             self.switches.power.isSwitchOn and self.constants.COLOR.GREEN or self.constants.COLOR.RED,
             self.constants.EMIT.INDICATOR)
@@ -127,7 +127,7 @@ return function(dependencies)
             self.factory_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
             self.constants.EMIT.INDICATOR)
 
-        self.switches.battery.state = self.switches.battery.isSwitchOn
+        self.io_switches.battery.state = self.switches.battery.isSwitchOn
         self.utils:setComponentColor(self.indicators.battery_switch,
             self.switch.battery.isSwitchOn and self.constants.COLOR.GREEN or self.constants.COLOR.RED,
             self.constants.EMIT.INDICATOR)
@@ -135,7 +135,7 @@ return function(dependencies)
             self.battery_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
             self.constants.EMIT.INDICATOR)
 
-        self.switches.lights.state = self.light_switch.isLightEnabled
+        self.io_switches.lights.state = self.light_switch.isLightEnabled
     end
 
     function PowerControl:updatePowerDisplays()
