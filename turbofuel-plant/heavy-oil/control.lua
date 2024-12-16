@@ -1,12 +1,12 @@
 -- turbofuel-plant/heavy-oil/control.lua
 return function(programs)
-    for _, program in ipairs(programs) do
-        Control:addProgram(program)
-    end
-
     local Control = {
         programs = {}
     }
+
+    for _, program in ipairs(programs) do
+        Control:addProgram(program)
+    end
 
     -- Add a program to be managed
     function Control:addProgram(program)
