@@ -56,7 +56,7 @@ return function(dependencies)
         -- Get the connectors
         self.main_circuit = self.switches.power:getPowerConnectors()[1]:getCircuit()
         self.factory_circuit = self.switches.power:getPowerConnectors()[2]:getCircuit()
-        self.battery_circuit = self.switches.battery:getPowerConnectors()[1]:getCircuit()
+        self.battery_circuit = self.switches.battery:getPowerConnectors()[2]:getCircuit()
 
         -- Set up event listening for power fuses
         event.listen(self.main_circuit)
