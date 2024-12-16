@@ -13,19 +13,21 @@ return function(dependencies)
         avg_prod_indicator = nil,
         constants = dependencies.constants,
         config = dependencies.config,
-        displayPanel = dependencies.displayPanel,
+        display_panel = dependencies.displayPanel,
         utils = dependencies.utils
 
     }
 
     function ProductivityMonitoring:initialize()
+        debug("===Initializing Program - Machine Control===")
+
         self.panel = component.proxy(config.PANEL_ID)
         if not self.panel then
             error("Failed to initialize panel")
         end
 
         for i, row in ipairs(config.DISPLAY_LAYOUT.MACHINE_ROWS) do
-            local modules = self.displayPanel:initializeMachineRow(self.panel, table.unpack(row))
+            local modules = self.display_panel:initializeMachineRow(self.panel, table.unpack(row))
             local buttons = modules[1]
             local gauges = modules[2]
 

@@ -1,29 +1,26 @@
 -- programs/flow_monitoring.lua
 
 return function(dependencies)
-    local constants = dependencies.constants
-    local config = dependencies.config
-    local displayPanel = dependencies.displayPanel
-    local utils = dependencies.utils
-
     local FlowMonitoring = {
         valves = {},
         networkCard = nil,
-        machines = {}
+        machines = {},
+        constants = dependencies.constants,
+        config = dependencies.config,
+        displayPanel = dependencies.displayPanel,
+        utils = dependencies.utils,
+        panel = nil,
     }
 
     function FlowMonitoring:initialize()
-        debug("Initializing valves...")
-        for type, valveIds in pairs(config.VALVES) do
-            self.valves[type] = {}
-            for i, id in ipairs(valveIds) do
-                local valve = component.proxy(id)
-                if not valve then
-                    error(string.format("Valve not found: %s - ID: %s", type, id))
-                end
-                self.valves[type][i] = valve
-            end
+        self.panel = component.proxy(config.PANEL_ID)
+        if not self.panel then
+            error("Failed to initialize panel")
         end
+
+        self:initializeFlowBlock(self.panel, 0, 0, 1)
+        self:initializeFlowBlock(self.panel, 7, 3, 1)
+        self:initializeFlowBlock(self.panel, 7, 0, 1)
 
         debug("Initializing machines...")
         for i, id in ipairs(config.REFINERY_IDS) do
@@ -32,38 +29,6 @@ return function(dependencies)
                 self.machines[i] = machine
             else
                 print("Warning: Failed to initialize machine " .. i)
-            end
-        end
-    end
-
-    function FlowMonitoring:updateValveFlowDisplays()
-        local totals = {}
-
-        for type, valves in pairs(self.valves) do
-            totals[type] = 0
-
-            for i, valve in ipairs(valves) do
-                -- Change this line from i - 1 to just i
-                local displayIndex = i
-                totals[type] = totals[type] + (valve.flow or 0)
-
-                if displayPanel.flow.liquids.gauges[type] and self.display.flow.liquids.gauges[type][displayIndex] then
-                    local gauge = self.display.flow.liquids.gauges[type][displayIndex]
-                    gauge.limit = valve.userFlowLimit
-                    gauge.percent = valve.flow / valve.userFlowLimit
-                    self.utils:updateGaugeColor(gauge)
-                end
-
-                if self.display.flow.liquids.displays[type] and self.display.flow.liquids.displays[type][displayIndex] then
-                    self.display.flow.liquids.displays[type][displayIndex]:setText(self.utils:formatValveFlowDisplay(
-                        valve
-                        .flow))
-                end
-            end
-
-            if self.display.flow.liquids.displays["total_" .. type] then
-                self.display.flow.liquids.displays["total_" .. type]:setText(self.utils:formatValveFlowDisplay(totals
-                    [type]))
             end
         end
     end
@@ -110,19 +75,12 @@ return function(dependencies)
     end
 
     function FlowMonitoring:update()
-        self:updateValveFlowDisplays()
-        --self:updateItemFlowDisplays()
         self:broadcastFlowStatus()
     end
 
     function FlowMonitoring:broadcastFlowStatus()
         local status = {}
-        for type, valves in pairs(self.valves) do
-            status[type] = {}
-            for i, valve in ipairs(valves) do
-                status[type][i] = valve.flow
-            end
-        end
+
 
         if self.networkCard then
             self.networkCard:broadcast(100, "flow_update", status)

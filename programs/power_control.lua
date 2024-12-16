@@ -1,61 +1,76 @@
 -- programs/powerControl.lua
 
 return function(dependencies)
-    local constants = dependencies.constants
-    local config = dependencies.config
-    local displayPanel = dependencies.displayPanel
-    local utils = dependencies.utils
-
     local Power = {
-        power_switch = nil,
-        battery_switch = nil,
-        light_switch = nil,
         networkCard = nil,
-        remoteControl = false,
-        mainCircuit = nil,
-        factoryCircuit = nil,
-        batteryCircuit = nil
+        main_circuit = nil,
+        factory_circuit = nil,
+        battery_circuit = nil,
+        constants = dependencies.constants,
+        config = dependencies.config,
+        display_panel = dependencies.displayPanel,
+        utils = dependencies.utils,
+        switches = {},
+        io_switches = {},
+        indicators = {},
+        battery = {},
+        power_displays = {},
+        panel = nil,
     }
 
     function Power:initialize()
-        -- Initialize power switches
-        self.power_switch = component.proxy(self.config.POWER.POWER_SWITCH)
-        self.battery_switch = component.proxy(self.config.POWER.BATTERY_SWITCH)
-        self.light_switch = component.proxy(self.config.POWER.LIGHT_SWITCH)
+        debug("===Initializing Program - Power Control===")
 
-        if not self.power_switch or not self.battery_switch or not self.light_switch then
-            error("Failed to initialize power switches")
+        self.switches.power = component.proxy(self.config.POWER.POWER_SWITCH)
+        self.switches.battery = component.proxy(self.config.POWER.BATTERY_SWITCH)
+        self.switches.lights = component.proxy(self.config.POWER.LIGHT_SWITCH)
+
+        self.panel = component.proxy(config.PANEL_ID)
+        if not self.panel then
+            error("Failed to initialize panel")
         end
 
-        -- Initialize IO switches
-        local powerIO = self.display.power.switches.MAIN
-        local batteryIO = self.display.power.switches.BATTERY
-        local lightIO = self.display.power.switches.LIGHTS
+        self.io_switches.factory = self.panel:getModule(2, 0, 2)
+        self.io_switches.battery = self.panel:getModule(6, 0, 2)
+        self.io_switches.lights = self.panel:getModule(10, 0, 2)
 
-        if not powerIO or not batteryIO or not lightIO then
-            error("Failed to initialize power IO switches")
-        end
+        -- Initialize power indicators
+        self.indicators.main = self.panel:getModule(0, 1, 2)
+        self.indicators.factory_switch = self.panel:getModule(2, 2, 2)
+        self.indicators.factory = self.panel:getModule(4, 1, 2)
+        self.indicators.battery_switch = self.panel:getModule(6, 2, 2)
+        self.indicators.battery = self.panel:getModule(8, 1, 2)
 
-        powerIO.state = false
+        -- Initialize battery displays
+        self.battery.remaining_time = self.panel:getModule(9, 3, 2)
+        self.battery.on_batteries = self.panel:getModule(9, 4, 2)
+        self.battery.charging = self.panel:getModule(9, 5, 2)
+        self.battery.percentage = self.panel:getModule(9, 6, 2)
+        self.battery.mwh = self.panel:getModule(7, 6, 2)
+
+        -- Initialize power displays
+        self.power_displays.MAIN_USED = self.panel:getModule(0, 3, 2)
+        self.power_displays.MAIN_PRODUCED = self.panel:getModule(1, 3, 2)
+        self.power_displays.FACTORY_USED = self.panel:getModule(4, 3, 2)
 
         -- Get the connectors
-        self.mainCircuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
-        self.factoryCircuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
-        self.batteryCircuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
+        self.main_circuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
+        self.factory_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
+        self.battery_circuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
 
         -- Set up event listening for power fuses
-        event.listen(self.mainGridCircuit)
-        event.listen(self.factoryCircuit)
-        event.listen(self.batteryCircuit)
+        event.listen(self.main_circuit)
+        event.listen(self.factory_circuit)
+        event.listen(self.battery_circuit)
 
         -- Set up event listening for IO switches
-        event.listen(powerIO)
-        event.listen(batteryIO)
-        event.listen(lightIO)
+        event.listen(self.io_switches.factory)
+        event.listen(self.io_switches.battery)
+        event.listen(self.io_switches.lights)
 
-        powerIO.state = self.power_switch.isSwitchOn
-        batteryIO.state = self.battery_switch.isSwitchOn
-        lightIO.state = self.light_switch.isLightEnabled
+        self.io_switches.factory.state = self.power_switch.isSwitchOn
+        self.io_switches.battery.state = self.battery_switch.isSwitchOn
+        self.io_switches.lights.state = self.light_switch.isLightEnabled
 
         -- Update initial power indicators
         self:updatePowerIndicators()
@@ -64,187 +79,137 @@ return function(dependencies)
     function Power:handlePowerFuseEvent(source)
         print("Handling power fuse event from source:", source)
 
-        if source == self.power_switch then
+        if source == self.switches.power then
             -- Update main grid indicator
-            self.utils:setComponentColor(self.display.power.indicators.MAIN,
-                self.mainGridCircuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
-                self.colors.EMIT.INDICATOR)
+            self.utils:setComponentColor(self.indicators.MAIN,
+                self.main_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
+                self.constants.EMIT.INDICATOR)
 
             -- Update factory indicator
-            self.utils:setComponentColor(self.display.power.indicators.FACTORY,
-                self.factoryCircuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
-                self.colors.EMIT.INDICATOR)
-        elseif source == self.battery_switch then
+            self.utils:setComponentColor(self.indicators.FACTORY,
+                self.factory_circuit.isFuesed and self.colors.constants.RED or self.colors.constants.GREEN,
+                self.constants.EMIT.INDICATOR)
+        elseif source == self.switches.battery then
             -- Update battery indicator
-            self.utils:setComponentColor(self.display.power.indicators.BATTERY,
-                self.batteryCircuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
+            self.utils:setComponentColor(self.indicators.BATTERY,
+                self.battery_circuit.isFuesed and self.colors.COLOR.RED or self.colors.COLOR.GREEN,
                 self.colors.EMIT.INDICATOR)
         end
     end
 
     function Power:handleIOSwitchEvent(source)
-        local powerIO = self.display.power.switches.MAIN
-        local batteryIO = self.display.power.switches.BATTERY
-        local lightIO = self.display.power.switches.LIGHTS
+        debug("Handling switch event from source:", source)
 
-        print("Handling switch event from source:", source)
-
-        -- Handle Main Power Switch
-        if source == powerIO then
-            print("Main power switch triggered, state:", source.state)
+        if source == self.switches.MAIN then
+            debug("Main power switch triggered, state:", source.state)
             self.power_switch:setIsSwitchOn(source.state)
             self:updatePowerIndicators()
-        elseif source == batteryIO then
-            print("Battery switch triggered, state:", source.state)
+        elseif source == self.switches.BATTERY then
+            debug("Battery switch triggered, state:", source.state)
             self.battery_switch:setIsSwitchOn(source.state)
             self:updatePowerIndicators()
-        elseif source == lightIO then
-            print("Light switch triggered, state:", source.state)
+        elseif source == self.switches.LIGHTS then
+            debug("Light switch triggered, state:", source.state)
             self.light_switch.isLightEnabled = source.state
         end
     end
 
     function Power:updatePowerIndicators()
-        local main_power_on = self.power_switch.isSwitchOn
-        local main_circuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
-        local factory_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
-
-        if main_circuit.isFuesed then
-            self.utils:setComponentColor(self.display.power.indicators.MAIN, self.colors.COLOR.RED,
-                self.colors.EMIT.INDICATOR)
+        if self.main_circuit.isFuesed then
+            self.utils:setComponentColor(self.indicators.MAIN, self.constants.COLOR.RED,
+                self.constants.EMIT.INDICATOR)
         else
-            self.utils:setComponentColor(self.display.power.indicators.MAIN, self.colors.COLOR.GREEN,
-                self.colors.EMIT.INDICATOR)
+            self.utils:setComponentColor(self.display.power.indicators.MAIN, self.constants.COLOR.GREEN,
+                self.constants.EMIT.INDICATOR)
         end
 
-        self.display.power.switches.MAIN.state = main_power_on
+        self.self.switches.factory.state = self.power_switch.isSwitchOn
         self.utils:setComponentColor(self.display.power.indicators.MAIN_SWITCH,
-            main_power_on and self.colors.COLOR.GREEN or self.colors.COLOR.RED, self.colors.EMIT.INDICATOR)
+            self.power_switch.isSwitchOn and self.constants.COLOR.GREEN or self.constants.COLOR.RED,
+            self.constants.EMIT.INDICATOR)
+        self.utils:setComponentColor(self.display.power.indicators.FACTORY,
+            self.factory_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
+            self.constants.EMIT.INDICATOR)
 
-        if factory_circuit.isFuesed then
-            self.utils:setComponentColor(self.display.power.indicators.FACTORY, self.colors.COLOR.RED,
-                self.colors.EMIT.INDICATOR)
-        else
-            self.utils:setComponentColor(self.display.power.indicators.FACTORY, self.colors.COLOR.GREEN,
-                self.colors.EMIT.INDICATOR)
-        end
 
-        local battery_power_on = self.battery_switch.isSwitchOn
-        local battery_circuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
+        self.switches.battery.state = self.switches.battery.isSwitchOn
+        self.utils:setComponentColor(self.indicators.battery_switch,
+            self.switch.battery.isSwitchOn and self.constants.COLOR.GREEN or self.constants.COLOR.RED,
+            self.constants.EMIT.INDICATOR)
+        self.utils:setComponentColor(self.display.power.indicators.BATTERY,
+            self.battery_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
+            self.constants.EMIT.INDICATOR)
 
-        self.display.power.switches.BATTERY.state = battery_power_on
-        self.utils:setComponentColor(self.display.power.indicators.BATTERY_SWITCH,
-            battery_power_on and self.colors.COLOR.GREEN or self.colors.COLOR.RED, self.colors.EMIT.INDICATOR)
-
-        if battery_circuit.isFuesed then
-            self.utils:setComponentColor(self.display.power.indicators.BATTERY, self.colors.COLOR.RED,
-                self.colors.EMIT.INDICATOR)
-        else
-            self.utils:setComponentColor(self.display.power.indicators.BATTERY, self.colors.COLOR.GREEN,
-                self.colors.EMIT.INDICATOR)
-        end
+        self.switches.lights.state = self.light_switch.isLightEnabled
     end
 
     function Power:updatePowerDisplays()
-        local main_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
-        local factory_circuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
-        local battery_circuit = self.battery_switch:getPowerConnectors()[2]:getCircuit()
+        self.power_displays.main_produced:setText(string.format("%.1f", self.main_circuit.production / 1000))
+        self.power_displays.main_used:setText(string.format("%.1f", self.main_circuit.consumption / 1000))
+        self.power_displays.factory_used:setText(string.format("%.1f", self.factory_circuit.consumption / 1000))
 
-        self.display.power.POWER_DISPLAYS.MAIN_PRODUCED:setText(string.format("%.1f", main_circuit.production / 1000))
-        self.display.power.POWER_DISPLAYS.MAIN_USED:setText(string.format("%.1f", main_circuit.consumption / 1000))
-        self.display.power.POWER_DISPLAYS.FACTORY_USED:setText(string.format("%.1f", factory_circuit.consumption / 1000))
+        self.battery.mwh:setText(string.format("%.0f MW/h", self.battery_circuit.batteryStore))
 
-        self.display.power.BATTERY.MWH:setText(string.format("%.0f MW/h", battery_circuit.batteryStore))
-
-        local time = battery_circuit.batteryTimeUntilEmpty
+        local time = self.battery_circuit.batteryTimeUntilEmpty
         if time == 0 then
-            time = battery_circuit.batteryTimeUntilFull
+            time = self.battery_circuit.batteryTimeUntilFull
             if time == 0 then
-                self.display.power.BATTERY.REMAINING_TIME:setText("-")
+                self.battery.remaining_time:setText("-")
             else
                 local min = string.format("%.0f", time / 60)
                 local seconds = string.format("%02d", math.floor(math.fmod(time, 60)))
-                self.display.power.BATTERY.REMAINING_TIME:setText(min .. ":" .. seconds)
+                self.battery.remaining_time:setText(min .. ":" .. seconds)
             end
         else
             local min = string.format("%.0f", time / 60)
             local seconds = string.format("%02d", math.floor(math.fmod(time, 60)))
-            self.display.power.BATTERY.REMAINING_TIME:setText(min .. ":" .. seconds)
+            self.battery.remaining_time:setText(min .. ":" .. seconds)
         end
 
-        local maxCapacity = battery_circuit.batteryCapacity
-        if maxCapacity and maxCapacity > 0 then
-            self.display.power.BATTERY.PERCENTAGE.limit = maxCapacity
-            local batteryPercent = (battery_circuit.batteryStore / maxCapacity) * 100
-            self.display.power.BATTERY.PERCENTAGE.percent = battery_circuit.batteryStore / maxCapacity
+        self.battery.percentage.limit = 1.0
+        local batteryPercent = self.battery_circuit.batteryStorePercent
+        self.percentage.percent = batteryPercent
 
-            if batteryPercent >= 75 then
-                self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.GREEN,
-                    self.colors.EMIT.GAUGE)
-            elseif batteryPercent >= 25 then
-                self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.YELLOW,
-                    self.colors.EMIT.GAUGE)
-            else
-                self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.RED,
-                    self.colors.EMIT.GAUGE)
-            end
+        if batteryPercent >= 0.75 then
+            self.utils:setComponentColor(self.battery.percentage, self.constants.COLOR.GREEN,
+                self.constants.EMIT.OFF)
+        elseif batteryPercent >= 0.5 then
+            self.utils:setComponentColor(self.battery.percentage, self.constants.COLOR.YELLOW,
+                self.constants.EMIT.OFF)
+        elseif batteryPercent >= 0.25 then
+            self.utils:setComponentColor(self.BATTERY.PERCENTAGE, self.constants.COLOR.ORANGE,
+                self.constants.EMIT.OFF)
         else
-            self.display.power.BATTERY.PERCENTAGE.limit = 1.0
-            local batteryPercent = battery_circuit.batteryStorePercent
-            self.display.power.BATTERY.PERCENTAGE.percent = batteryPercent / 100
-
-            if batteryPercent >= 75 then
-                self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.GREEN,
-                    self.colors.EMIT.GAUGE)
-            elseif batteryPercent >= 25 then
-                self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.YELLOW,
-                    self.colors.EMIT.GAUGE)
-            else
-                self.utils:setComponentColor(self.display.power.BATTERY.PERCENTAGE, self.colors.COLOR.RED,
-                    self.colors.EMIT.GAUGE)
-            end
+            self.utils:setComponentColor(self.BATTERY.PERCENTAGE, self.constants.COLOR.RED,
+                self.constants.EMIT.OFF)
         end
 
-        if battery_circuit.batteryTimeUntilFull > 0 then
-            self.utils:setComponentColor(self.display.power.BATTERY.CHARGING, self.colors.COLOR.GREEN,
-                self.colors.EMIT.INDICATOR)
-        else
-            self.utils:setComponentColor(self.display.power.BATTERY.CHARGING, self.colors.COLOR.GREEN,
-                self.colors.EMIT.OFF)
-        end
+        self.utils:setComponentColor(self.display.power.BATTERY.CHARGING, self.colors.COLOR.GREEN,
+            self.battery_circuit.batteryTimeUntilFull > 0 and self.colors.EMIT.INDICATOR or self.colors.EMIT.OFF)
 
-        if battery_circuit.batteryTimeUntilEmpty > 0 then
-            self.utils:setComponentColor(self.display.power.BATTERY.ON_BATTERIES, self.colors.COLOR.GREEN,
-                self.colors.EMIT.INDICATOR)
-        else
-            self.utils:setComponentColor(self.display.power.BATTERY.ON_BATTERIES, self.colors.COLOR.GREEN,
-                self.colors.EMIT.OFF)
-        end
+        self.utils:setComponentColor(self.display.power.BATTERY.ON_BATTERIES, self.colors.COLOR.GREEN,
+            self.battery_circuit.batteryTimeUntilEmpty > 0 and self.colors.EMIT.INDICATOR, self.colors.EMIT.OFF)
     end
 
     function Power:broadcastPowerStatus()
-        local main_circuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
-        local factory_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
-        local battery_circuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
-
         if self.networkCard then
             self.networkCard:broadcast(100, "power_update", {
                 grid = {
-                    production = main_circuit.production,
-                    consumption = main_circuit.consumption,
-                    isFused = main_circuit.isFuesed,
+                    production = self.main_circuit.production,
+                    consumption = self.main_circuit.consumption,
+                    isFused = self.main_circuit.isFuesed,
                     isOn = self.power_switch.isSwitchOn
                 },
                 factory = {
-                    consumption = factory_circuit.consumption,
-                    isFused = factory_circuit.isFuesed
+                    consumption = self.factory_circuit.consumption,
+                    isFused = self.factory_circuit.isFuesed
                 },
                 battery = {
-                    storePercent = battery_circuit.batteryStorePercent,
-                    timeUntilEmpty = battery_circuit.batteryTimeUntilEmpty,
-                    timeUntilFull = battery_circuit.batteryTimeUntilFull,
-                    isOn = self.battery_switch.isSwitchOn,
-                    isFused = battery_circuit.isFuesed
+                    storePercent = self.battery_circuit.batteryStorePercent,
+                    timeUntilEmpty = self.battery_circuit.batteryTimeUntilEmpty,
+                    timeUntilFull = self.battery_circuit.batteryTimeUntilFull,
+                    isOn = self.switches.battery.isSwitchOn,
+                    isFused = self.battery_circuit.isFuesed
                 }
             })
         end
@@ -259,9 +224,9 @@ return function(dependencies)
     function Power:handleNetworkMessage(type, data)
         if type == "grid" then
             if data then
-                self.power_switch:setIsSwitchOn(true)
+                self.switches.power:setIsSwitchOn(true)
             else
-                self.power_switch:setIsSwitchOn(false)
+                self.switches.power:setIsSwitchOn(false)
             end
             self:updatePowerIndicators()
         end
