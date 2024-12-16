@@ -163,7 +163,7 @@ return function(dependencies)
 
         self.battery.percentage.limit = 1.0
         local batteryPercent = self.battery_circuit.batteryStorePercent
-        self.percentage.percent = batteryPercent
+        self.battery.percentage.percent = batteryPercent
 
         if batteryPercent >= 0.75 then
             self.utils:setComponentColor(self.battery.percentage, self.constants.COLOR.GREEN,
