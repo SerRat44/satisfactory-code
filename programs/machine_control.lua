@@ -51,7 +51,6 @@ return function(dependencies)
 
         self.light_switch = component.proxy(self.config.POWER.LIGHT_SWITCH)
 
-        -- Initialize machines...
         debug("Initializing machines...")
         for i, id in ipairs(self.config.REFINERY_IDS) do
             local machine = component.proxy(id)
@@ -62,7 +61,6 @@ return function(dependencies)
             end
         end
 
-        -- Set up event listeners
         for i, button in ipairs(self.prod_buttons) do
             if button then
                 event.listen(button)
