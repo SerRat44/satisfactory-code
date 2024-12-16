@@ -179,11 +179,11 @@ return function(dependencies)
                 self.constants.EMIT.OFF)
         end
 
-        self.utils:setComponentColor(self.battery.charging, self.colors.COLOR.GREEN,
-            self.battery_circuit.batteryTimeUntilFull > 0 and self.colors.EMIT.INDICATOR or self.colors.EMIT.OFF)
+        self.utils:setComponentColor(self.battery.charging, self.constants.COLOR.GREEN,
+            self.battery_circuit.batteryTimeUntilFull > 0 and self.constants.EMIT.INDICATOR or self.constants.EMIT.OFF)
 
-        self.utils:setComponentColor(self.battery.on_batteries, self.colors.COLOR.GREEN,
-            self.battery_circuit.batteryTimeUntilEmpty > 0 and self.colors.EMIT.INDICATOR, self.colors.EMIT.OFF)
+        self.utils:setComponentColor(self.battery.on_batteries, self.constants.COLOR.GREEN,
+            self.battery_circuit.batteryTimeUntilEmpty > 0 and self.constants.EMIT.INDICATOR, self.constants.EMIT.OFF)
     end
 
     function PowerControl:broadcastPowerStatus()
