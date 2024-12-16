@@ -44,7 +44,7 @@ return function(dependencies)
         local flows = {}
 
         for i, prod in ipairs(recipe:getProducts()) do
-            local itemsPerMin = prod[1].amount * runsPerMin
+            local itemsPerMin = prod.amount * runsPerMin
 
             if prod.type.form == 2 or prod.type.form == 3 then
                 itemsPerMin = itemsPerMin / 1000
@@ -52,7 +52,7 @@ return function(dependencies)
 
             itemsPerMin = itemsPerMin * potential
 
-            flows[i].item = prod.type.name
+            flows[i].item = prod.name
             flows[i].maxFlow = itemsPerMin
         end
 
