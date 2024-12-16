@@ -4,24 +4,27 @@ return function()
     local Display = {}
 
     -- Initializes a row of machine buttons and gauges. Outputs two arrays: one for buttons and one for gauges.
-    function Display:initializeMachineRow(panel, startX, startY, panelNum, count)
+    function Display:initializeMachineRow(panel, config)
         local buttons = {}
         local gauges = {}
 
-        for i = 0, count - 1 do
-            local buttonIndex = #buttons + 1
-            local gaugeIndex = #gauges + 1
-            local x = startX + i
+        -- Validate config
+        if not config.startX or not config.startY or not config.panelNum or not config.count then
+            error("Invalid machine row configuration")
+        end
+
+        for i = 0, config.count - 1 do
+            local x = config.startX + i
 
             -- Initialize button
-            local button = panel:getModule(x, startY, panelNum)
+            local button = panel:getModule(x, config.startY, config.panelNum)
             if button then
-                buttons[buttonIndex] = button
+                buttons[#buttons + 1] = button
 
                 -- Initialize corresponding gauge (one unit above button)
-                local gauge = panel:getModule(x, startY + 1, panelNum)
+                local gauge = panel:getModule(x, config.startY + 1, config.panelNum)
                 if gauge then
-                    gauges[gaugeIndex] = gauge
+                    gauges[#gauges + 1] = gauge
                 end
             end
         end

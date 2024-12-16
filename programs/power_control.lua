@@ -1,7 +1,7 @@
 -- programs/powerControl.lua
 
 return function(dependencies)
-    local Power = {
+    local PowerControl = {
         networkCard = nil,
         main_circuit = nil,
         factory_circuit = nil,
@@ -18,7 +18,7 @@ return function(dependencies)
         panel = nil,
     }
 
-    function Power:initialize()
+    function PowerControl:initialize()
         debug("===Initializing Program - Power Control===")
 
         self.switches.power = component.proxy(self.config.POWER.POWER_SWITCH)
@@ -76,7 +76,7 @@ return function(dependencies)
         self:updatePowerIndicators()
     end
 
-    function Power:handlePowerFuseEvent(source)
+    function PowerControl:handlePowerFuseEvent(source)
         print("Handling power fuse event from source:", source)
 
         if source == self.switches.power then
@@ -97,7 +97,7 @@ return function(dependencies)
         end
     end
 
-    function Power:handleIOSwitchEvent(source)
+    function PowerControl:handleIOSwitchEvent(source)
         debug("Handling switch event from source:", source)
 
         if source == self.switches.MAIN then
@@ -114,7 +114,7 @@ return function(dependencies)
         end
     end
 
-    function Power:updatePowerIndicators()
+    function PowerControl:updatePowerIndicators()
         if self.main_circuit.isFuesed then
             self.utils:setComponentColor(self.indicators.MAIN, self.constants.COLOR.RED,
                 self.constants.EMIT.INDICATOR)
@@ -143,7 +143,7 @@ return function(dependencies)
         self.switches.lights.state = self.light_switch.isLightEnabled
     end
 
-    function Power:updatePowerDisplays()
+    function PowerControl:updatePowerDisplays()
         self.power_displays.main_produced:setText(string.format("%.1f", self.main_circuit.production / 1000))
         self.power_displays.main_used:setText(string.format("%.1f", self.main_circuit.consumption / 1000))
         self.power_displays.factory_used:setText(string.format("%.1f", self.factory_circuit.consumption / 1000))
@@ -191,7 +191,7 @@ return function(dependencies)
             self.battery_circuit.batteryTimeUntilEmpty > 0 and self.colors.EMIT.INDICATOR, self.colors.EMIT.OFF)
     end
 
-    function Power:broadcastPowerStatus()
+    function PowerControl:broadcastPowerStatus()
         if self.networkCard then
             self.networkCard:broadcast(100, "power_update", {
                 grid = {
@@ -215,13 +215,13 @@ return function(dependencies)
         end
     end
 
-    function Power:update()
+    function PowerControl:update()
         self:updatePowerDisplays()
         self:updateIOColors()
         self:broadcastPowerStatus()
     end
 
-    function Power:handleNetworkMessage(type, data)
+    function PowerControl:handleNetworkMessage(type, data)
         if type == "grid" then
             if data then
                 self.switches.power:setIsSwitchOn(true)
@@ -232,5 +232,5 @@ return function(dependencies)
         end
     end
 
-    return Power
+    return PowerControl
 end

@@ -1,7 +1,7 @@
 -- programs/machine_control.lua
 
 return function(dependencies)
-    local ProductivityMonitoring = {
+    local MachineControl = {
         machines = {},
         emergency_state = false,
         networkCard = nil,
@@ -18,7 +18,7 @@ return function(dependencies)
 
     }
 
-    function ProductivityMonitoring:initialize()
+    function MachineControl:initialize()
         debug("===Initializing Program - Machine Control===")
 
         self.panel = component.proxy(self.config.PANEL_ID)
@@ -26,21 +26,33 @@ return function(dependencies)
             error("Failed to initialize panel")
         end
 
-        for i, row in ipairs(self.config.DISPLAY_LAYOUT.MACHINE_ROWS) do
-            local modules = self.display_panel:initializeMachineRow(self.panel, table.unpack(row))
-            local buttons = modules[1]
-            local gauges = modules[2]
+        -- Initialize buttons and gauges for each row
+        for _, row in ipairs(self.config.DISPLAY_LAYOUT.MACHINE_ROWS) do
+            local buttons, gauges = self.display_panel:initializeMachineRow(self.panel, row)
 
-            table.insert(self.prod_buttons, table.unpack(buttons))
-            table.insert(self.prod_gauges, table.unpack(gauges))
+            -- Add buttons and gauges to our arrays
+            for _, button in ipairs(buttons) do
+                table.insert(self.prod_buttons, button)
+            end
+
+            for _, gauge in ipairs(gauges) do
+                table.insert(self.prod_gauges, gauge)
+            end
         end
 
-        self.emergency_stop = self.panel:getModule(table.unpack(self.config.DISPLAY_LAYOUT.EMERGENCY_STOP))
-        self.avg_prod_indicator = self.panel:getModule(table.unpack(self.config.DISPLAY_LAYOUT.AVG_PROD_INDICATOR))
+        -- Rest of the initialization code remains the same...
+        self.emergency_stop = self.panel:getModule(self.config.DISPLAY_LAYOUT.EMERGENCY_STOP.x,
+            self.config.DISPLAY_LAYOUT.EMERGENCY_STOP.y,
+            self.config.DISPLAY_LAYOUT.EMERGENCY_STOP.z)
+
+        self.avg_prod_indicator = self.panel:getModule(self.config.DISPLAY_LAYOUT.AVG_PROD_INDICATOR.x,
+            self.config.DISPLAY_LAYOUT.AVG_PROD_INDICATOR.y,
+            self.config.DISPLAY_LAYOUT.AVG_PROD_INDICATOR.z)
 
         self.light_switch = component.proxy(self.config.POWER.LIGHT_SWITCH)
 
-        print("Initializing machines...")
+        -- Initialize machines...
+        debug("Initializing machines...")
         for i, id in ipairs(self.config.REFINERY_IDS) do
             local machine = component.proxy(id)
             if machine then
@@ -50,7 +62,7 @@ return function(dependencies)
             end
         end
 
-
+        -- Set up event listeners
         for i, button in ipairs(self.prod_buttons) do
             if button then
                 event.listen(button)
@@ -64,7 +76,7 @@ return function(dependencies)
         self:updateAllDisplays()
     end
 
-    function ProductivityMonitoring:handleEmergencyStop()
+    function MachineControl:handleEmergencyStop()
         print("Emergency stop triggered")
         self.emergency_state = not self.emergency_state
 
@@ -86,7 +98,7 @@ return function(dependencies)
         self:updateAllDisplays()
     end
 
-    function ProductivityMonitoring:handleButtonPress(button_id)
+    function MachineControl:handleButtonPress(button_id)
         print("Button press handled: " .. button_id)
         local machine = self.machines[button_id]
         if machine then
@@ -97,7 +109,7 @@ return function(dependencies)
         end
     end
 
-    function ProductivityMonitoring:avgProductivity()
+    function MachineControl:avgProductivity()
         local total = 0
         local count = 0
         local avg_productivity
@@ -113,7 +125,7 @@ return function(dependencies)
         return avg_productivity
     end
 
-    function ProductivityMonitoring:updateGauge(index)
+    function MachineControl:updateGauge(index)
         local gauge = self.prod_gauges[index]
         local machine = self.machines[index]
 
@@ -131,7 +143,7 @@ return function(dependencies)
         end
     end
 
-    function ProductivityMonitoring:updateProdIndicator()
+    function MachineControl:updateProdIndicator()
         if self.emergency_state then
             self.utils:setComponentColor(self.avg_prod_indicator, self.constants.COLOR.RED,
                 self.constants.EMIT.INDICATOR)
@@ -153,7 +165,7 @@ return function(dependencies)
         end
     end
 
-    function ProductivityMonitoring:updateButton(index)
+    function MachineControl:updateButton(index)
         local button = self.prod_buttons[index]
         local machine = self.machines[index]
 
@@ -173,7 +185,7 @@ return function(dependencies)
         end
     end
 
-    function ProductivityMonitoring:updateEmergencyButton()
+    function MachineControl:updateEmergencyButton()
         if self.emergency_state then
             self.utils:setComponentColor(self.emergency_stop, self.constants.COLOR.RED, self.constants.EMIT
                 .BUTTON)
@@ -182,7 +194,7 @@ return function(dependencies)
         end
     end
 
-    function ProductivityMonitoring:updateAllDisplays()
+    function MachineControl:updateAllDisplays()
         for i = 1, #self.machines do
             self:updateButton(i)
             self:updateGauge(i)
@@ -190,7 +202,7 @@ return function(dependencies)
         self:updateProdIndicator()
     end
 
-    function ProductivityMonitoring:broadcastMachineStatus()
+    function MachineControl:broadcastMachineStatus()
         for i, machine in ipairs(self.machines) do
             if self.networkCard then
                 self.networkCard:broadcast(100, "machine_update", {
@@ -202,7 +214,7 @@ return function(dependencies)
         end
     end
 
-    function ProductivityMonitoring:handleIOTriggerEvent(source)
+    function MachineControl:handleIOTriggerEvent(source)
         -- Check emergency stop
         if source == self.emergency_stop then
             print("Emergency stop triggered")
@@ -220,10 +232,10 @@ return function(dependencies)
         end
     end
 
-    function ProductivityMonitoring:update()
+    function MachineControl:update()
         self:updateAllDisplays()
         self:broadcastMachineStatus()
     end
 
-    return ProductivityMonitoring
+    return MachineControl
 end
