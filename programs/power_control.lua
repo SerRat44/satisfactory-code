@@ -69,8 +69,8 @@ return function(dependencies)
         event.listen(self.io_switches.lights)
 
         self.io_switches.factory.state = self.switches.power.isSwitchOn
-        self.io_switches.battery.state = self.io_switches.battery.isSwitchOn
-        self.io_switches.lights.state = self.io_switches.lights.isLightEnabled
+        self.io_switches.battery.state = self.switches.battery.isSwitchOn
+        self.io_switches.lights.state = self.switches.lights.isLightEnabled
 
         -- Update initial power indicators
         self:updatePowerIndicators()
@@ -119,15 +119,15 @@ return function(dependencies)
             self.utils:setComponentColor(self.indicators.MAIN, self.constants.COLOR.RED,
                 self.constants.EMIT.INDICATOR)
         else
-            self.utils:setComponentColor(self.display.power.indicators.MAIN, self.constants.COLOR.GREEN,
+            self.utils:setComponentColor(self.indicators.MAIN, self.constants.COLOR.GREEN,
                 self.constants.EMIT.INDICATOR)
         end
 
         self.self.switches.factory.state = self.power_switch.isSwitchOn
-        self.utils:setComponentColor(self.display.power.indicators.MAIN_SWITCH,
+        self.utils:setComponentColor(self.indicators.main_switch,
             self.power_switch.isSwitchOn and self.constants.COLOR.GREEN or self.constants.COLOR.RED,
             self.constants.EMIT.INDICATOR)
-        self.utils:setComponentColor(self.display.power.indicators.FACTORY,
+        self.utils:setComponentColor(self.indicators.FACTORY,
             self.factory_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
             self.constants.EMIT.INDICATOR)
 
@@ -136,7 +136,7 @@ return function(dependencies)
         self.utils:setComponentColor(self.indicators.battery_switch,
             self.switch.battery.isSwitchOn and self.constants.COLOR.GREEN or self.constants.COLOR.RED,
             self.constants.EMIT.INDICATOR)
-        self.utils:setComponentColor(self.display.power.indicators.BATTERY,
+        self.utils:setComponentColor(self.indicators.battery,
             self.battery_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
             self.constants.EMIT.INDICATOR)
 
