@@ -37,7 +37,7 @@ return function(dependencies)
         end
     end
 
-    function FlowMonitoring:getMaxProductsFlow(machine)
+    function FlowMonitoring:getMaxProductFlow(machine)
         local recipe = machine:getRecipe()
         local runsPerMin = 60.0 / recipe.duration
         local potential = machine.potential * machine.productionBoost
