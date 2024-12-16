@@ -13,7 +13,7 @@ return function(dependencies)
     }
 
     function FlowMonitoring:initialize()
-        self.panel = component.proxy(config.PANEL_ID)
+        self.panel = component.proxy(self.config.PANEL_ID)
         if not self.panel then
             error("Failed to initialize panel")
         end
@@ -23,7 +23,7 @@ return function(dependencies)
         self:initializeFlowBlock(self.panel, 7, 0, 1)
 
         debug("Initializing machines...")
-        for i, id in ipairs(config.REFINERY_IDS) do
+        for i, id in ipairs(self.config.REFINERY_IDS) do
             local machine = component.proxy(id)
             if machine then
                 self.machines[i] = machine
