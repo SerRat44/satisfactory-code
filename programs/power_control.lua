@@ -129,7 +129,7 @@ return function(dependencies)
 
         self.io_switches.battery.state = self.switches.battery.isSwitchOn
         self.utils:setComponentColor(self.indicators.battery_switch,
-            self.switch.battery.isSwitchOn and self.constants.COLOR.GREEN or self.constants.COLOR.RED,
+            self.switches.battery.isSwitchOn and self.constants.COLOR.GREEN or self.constants.COLOR.RED,
             self.constants.EMIT.INDICATOR)
         self.utils:setComponentColor(self.indicators.battery,
             self.battery_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
