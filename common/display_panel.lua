@@ -36,9 +36,9 @@ return function()
     function Display:initializeFlowBlock(panel, startX, startY, panelNum)
         local gauge = panel:getModule(startX, startY, panelNum)
         local topDisplay = panel:getModule(startX + 2, startY + 1, panelNum)
-        local bottomDisplay2 = panel:getModule(startX + 2, startY, panelNum)
+        local bottomDisplay = panel:getModule(startX + 2, startY, panelNum)
 
-        return gauge, topDisplay, bottomDisplay2
+        return gauge, topDisplay, bottomDisplay
     end
 
     return Display

@@ -5,11 +5,13 @@ return function(dependencies)
         valves = {},
         networkCard = nil,
         machines = {},
+        flow_block = {},
         constants = dependencies.constants,
         config = dependencies.config,
         displayPanel = dependencies.displayPanel,
         utils = dependencies.utils,
         panel = nil,
+
     }
 
     function FlowMonitoring:initialize()
@@ -18,9 +20,11 @@ return function(dependencies)
             error("Failed to initialize panel")
         end
 
-        self.displayPanel:initializeFlowBlock(self.panel, 0, 0, 1)
-        self.displayPanel:initializeFlowBlock(self.panel, 7, 3, 1)
-        self.displayPanel:initializeFlowBlock(self.panel, 7, 0, 1)
+        for i, block in ipairs(self.config.DISPLAY_LAYOUT.FLOW_BLOCKS) do
+            local gauge, topDisplay, bottomDisplay = self.displayPanel:initializeFlowBlock(self.panel, block.x, block.y,
+                block.z)
+            self.display.flow_block[i] = { gauge = gauge, topDisplay = topDisplay, bottomDisplay = bottomDisplay }
+        end
 
         debug("Initializing machines...")
         for i, id in ipairs(self.config.REFINERY_IDS) do
@@ -28,12 +32,12 @@ return function(dependencies)
             if machine then
                 self.machines[i] = machine
             else
-                print("Warning: Failed to initialize machine " .. i)
+                debug("Warning: Failed to initialize machine " .. i)
             end
         end
     end
 
-    function FlowMonitoring:getProductFlow(machine)
+    function FlowMonitoring:getMaxProductFlow(machine)
         local recipe = machine:getRecipe()
         local product = recipe:getProducts()[1][1]
         local runsPerMin = 60.0 / recipe.duration
@@ -42,39 +46,35 @@ return function(dependencies)
         for _, prod in ipairs(recipe:getProducts()) do
             local itemsPerMin = prod[1].amount * runsPerMin
 
-            if product.type.form == 2 or item.type.form == 3 then
+            if product.type.form == 2 or product.type.form == 3 then
                 itemsPerMin = itemsPerMin / 1000
             end
 
             itemsPerMin = itemsPerMin * potential
 
             print(prod.type.name, itemsPerMin, " / min")
+            return product.name, itemsPerMin
         end
     end
 
     function FlowMonitoring:updateItemFlowDisplays()
-        for type, gauge in pairs(self.display.flow.items.gauges) do
-            for i = 1, #self.machines do
-                self:getProductFlow(self.machines[i])
-            end
+        for i, block in pairs(self.flow_block) do
+            local item, maxFlow = self:getMaxProductFlow(self.machines[i])
 
+            local maxFlow = maxFlow
+            local currentFlow = maxFlow * self.machine[i].productivity
 
-
-            local maxFlow = 780
-            local currentFlow = 0
-
-            gauge.limit = maxFlow
-            gauge.percent = currentFlow / maxFlow
+            block.gauge.limit = maxFlow
+            block.gauge.percent = currentFlow / maxFlow
             self.utils:updateGaugeColor(gauge)
 
-            -- Update corresponding display if it exists
-            if self.display.flow.items.displays[type] then
-                self.display.flow.items.displays[type]:setText(self.utils:formatItemFlowDisplay(currentFlow))
-            end
+            self.flow_block.topDisplay:setText(string.format("%.2f", currentFlow))
+            self.flow_block.bottomDisplay:setText(item)
         end
     end
 
     function FlowMonitoring:update()
+        self:updateItemFlowDisplays()
         self:broadcastFlowStatus()
     end
 

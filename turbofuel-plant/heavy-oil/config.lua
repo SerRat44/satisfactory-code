@@ -74,6 +74,11 @@ return {
             { startX = 1, startY = 5, panelNum = 0, count = 10 }
         },
         EMERGENCY_STOP = { x = 10, y = 10, z = 0 },
-        AVG_PROD_INDICATOR = { x = 2, y = 10, z = 0 }
+        AVG_PROD_INDICATOR = { x = 2, y = 10, z = 0 },
+        FLOW_BLOCKS = {
+            { x = 0, y = 0, z = 1 },
+            { x = 7, y = 3, z = 1 },
+            { x = 7, y = 0, z = 1 }
+        }
     }
 }
