@@ -23,7 +23,7 @@ return function(dependencies)
         for i, block in ipairs(self.config.DISPLAY_LAYOUT.FLOW_BLOCKS) do
             local gauge, topDisplay, bottomDisplay = self.displayPanel:initializeFlowBlock(self.panel, block.x, block.y,
                 block.z)
-            self.display.flow_block[i] = { gauge = gauge, topDisplay = topDisplay, bottomDisplay = bottomDisplay }
+            self.flow_block[i] = { gauge = gauge, topDisplay = topDisplay, bottomDisplay = bottomDisplay }
         end
 
         debug("Initializing machines...")
