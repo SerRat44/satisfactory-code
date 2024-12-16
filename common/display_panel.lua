@@ -1,78 +1,51 @@
 -- common/display.lua
 
 return function()
-    local Display = {
-        modules = {
-            prod = {},
-            power = {},
-            flow = {}
-        }
-    }
+    local Display = {}
 
-    -- Helper function to get module safely
-    local function getModuleIfExists(panel, x, y, z)
-        local success, module = pcall(function()
-            return panel:getModule(x, y, z)
-        end)
-        return success and module or nil
-    end
-
+    -- Initializes a row of machine buttons and gauges. Outputs two tables: table 1 contains the buttons, table 2 contains the gauges.
     function Display:initializeMachineRow(panel, startX, startY, panelNum, count)
-        -- Create arrays if they don't exist
-        self.modules.prod.buttons = self.modules.prod.buttons or {}
-        self.modules.prod.gauges = self.modules.prod.gauges or {}
+        local buttons = {}
+        local gauges = {}
 
         for i = 0, count - 1 do
-            local buttonIndex = #self.modules.prod.buttons + 1
+            local buttonIndex = #buttons + 1
+            local gaugeIndex = #gauges + 1
             local x = startX + i
 
             -- Initialize button
-            local button = getModuleIfExists(panel, x, startY, panelNum)
+            local button = panel:getModule(x, startY, panelNum)
             if button then
-                self.modules.prod.buttons[buttonIndex] = button
+                buttons[buttonIndex] = button
 
                 -- Initialize corresponding gauge (one unit above button)
-                local gauge = getModuleIfExists(panel, x, startY + 1, panelNum)
+                local gauge = panel:getModule(x, startY + 1, panelNum)
                 if gauge then
-                    self.modules.prod.gauges[buttonIndex] = gauge
+                    gauges[gaugeIndex] = gauge
                 end
             end
         end
+
+        return buttons, gauges
     end
 
     function Display:initializeFlowBlock(panel, startX, startY, panelNum, type)
         -- Initialize gauge
-        local gauge = getModuleIfExists(panel, startX, startY, panelNum)
+        local gauge = self:getModuleIfExists(panel, startX, startY, panelNum)
         if gauge then
             self.modules.flow.gauges[type] = gauge
         end
 
         -- Initialize displays
-        local display1 = getModuleIfExists(panel, startX + 2, startY + 1, panelNum)
+        local display1 = self:getModuleIfExists(panel, startX + 2, startY + 1, panelNum)
         if display1 then
             self.modules.flow.displays[type] = display1
         end
 
-        local display2 = getModuleIfExists(panel, startX + 2, startY, panelNum)
+        local display2 = self:getModuleIfExists(panel, startX + 2, startY, panelNum)
         if display2 then
             self.modules.flow.displays[type] = display2
         end
-    end
-
-    function Display:initializeProdModules()
-        -- Create necessary tables
-        self.modules.prod.indicators = self.modules.prod.indicators or {}
-        self.modules.prod.gauges = self.modules.flow.gauges or {}
-
-        -- Initialize machine rows
-        self:initializeMachineRow(1, 2, 0, 10)
-        self:initializeMachineRow(1, 0, 0, 10)
-        self:initializeMachineRow(1, 7, 0, 10)
-        self:initializeMachineRow(1, 5, 0, 10)
-
-        -- Initialize other factory modules
-        self.modules.prod.buttons.emergency_stop = self.panel:getModule(10, 10, 0)
-        self.modules.prod.indicators.avg_productivity = self.panel:getModule(2, 10, 0)
     end
 
     function Display:initializeFlowModules()
@@ -111,27 +84,6 @@ return function()
         self.modules.power.POWER_DISPLAYS.MAIN_USED = self.panel:getModule(0, 3, 2)
         self.modules.power.POWER_DISPLAYS.MAIN_PRODUCED = self.panel:getModule(1, 3, 2)
         self.modules.power.POWER_DISPLAYS.FACTORY_USED = self.panel:getModule(4, 3, 2)
-    end
-
-    function Display:new(display_panel)
-        if not display_panel then
-            error("Display panel is required")
-        end
-
-        local instance = {}
-        setmetatable(instance, { __index = self })
-        instance.panel = display_panel
-
-        return instance
-    end
-
-    function Display:initialize()
-        -- Initialize all module types
-        self:initializeProdModules()
-        self:initializeFlowModules()
-        self:initializePowerModules()
-
-        return self.modules
     end
 
     return Display

@@ -10,42 +10,54 @@ return function(dependencies)
         machines = {},
         emergency_state = false,
         networkCard = nil,
-        light_switch = nil
+        light_switch = nil,
+        panel = nil,
+        prod_buttons = {},
+        prod_gauges = {},
+        emergency_stop = nil,
+        avg_prod_indicator = nil
     }
 
     function ProductivityMonitoring:initialize()
-        -- Initialize light switch
-        self.light_switch = component.proxy(config.POWER.LIGHT_SWITCH)
-        if not self.light_switch then
-            error("Light switch not found")
+        self.panel = component.proxy(config.PANEL_ID)
+        if not self.panel then
+            error("Failed to initialize panel")
         end
 
-        -- Initialize machines
+        for i, row in ipairs(config.DISPLAY_LAYOUT.MACHINE_ROWS) do
+            local modules = displayPanel:initializeMachineRow(self.panel, table.unpack(row))
+            local buttons = modules[1]
+            local gauges = modules[2]
+
+            table.insert(self.prod_buttons, table.unpack(buttons))
+            table.insert(self.prod_gauges, table.unpack(gauges))
+        end
+
+        self.emergency_stop = self.panel:getModule(table.unpack(config.DISPLAY_LAYOUT.EMERGENCY_STOP))
+        self.avg_prod_indicator = self.panel:getModule(table.unpack(config.DISPLAY_LAYOUT.AVG_PROD_INDICATOR))
+
+        self.light_switch = component.proxy(config.POWER.LIGHT_SWITCH)
+
         print("Initializing machines...")
         for i, id in ipairs(config.REFINERY_IDS) do
             local machine = component.proxy(id)
             if machine then
                 self.machines[i] = machine
             else
-                print("Warning: Failed to initialize machine " .. i)
+                debug("Warning: Failed to initialize machine " .. i)
             end
         end
 
-        -- Listen to machine buttons
-        if displayPanel and displayPanel.prod then
-            for i, button in ipairs(displayPanel.prod.buttons) do
-                if button then
-                    event.listen(button)
-                else
-                    print("Warning: Button " .. i .. " not found")
-                end
-            end
 
-            -- Initialize emergency stop
-            if displayPanel.prod.emergency_stop then
-                event.listen(displayPanel.prod.emergency_stop)
+        for i, button in ipairs(self.prod_buttons) do
+            if button then
+                event.listen(button)
+            else
+                debug("Warning: Button " .. i .. " not found")
             end
         end
+
+        event.listen(self.emergency_stop)
 
         self:updateAllDisplays()
     end
@@ -100,7 +112,7 @@ return function(dependencies)
     end
 
     function ProductivityMonitoring:updateGauge(index)
-        local gauge = displayPanel.prod.gauges[index]
+        local gauge = self.prod_gauges[index]
         local machine = self.machines[index]
 
         if gauge then
@@ -112,40 +124,36 @@ return function(dependencies)
                 utils:updateGaugeColor(gauge)
             else
                 gauge.percent = 0
-                utils:setComponentColor(gauge, self.colors.COLOR.RED, self.colors.EMIT.OFF)
+                utils:setComponentColor(gauge, constants.COLOR.RED, constants.EMIT.OFF)
             end
         end
     end
 
     function ProductivityMonitoring:updateProdIndicator()
-        if not displayPanel.prod.indicatrors.avg_productivity then return end
-
         if self.emergency_state then
-            utils:setComponentColor(displayPanel.prod.indicatrors.avg_productivity, self.colors.COLOR.RED,
+            utils:setComponentColor(self.avg_prod_indicator, constants.COLOR.RED,
                 constants.EMIT.INDICATOR)
         else
             local avgProductivity = self:avgProductivity()
             if avgProductivity >= 0.9 then
-                utils:setComponentColor(displayPanel.prod.indicatrors.avg_productivity, self.colors.COLOR.GREEN,
+                utils:setComponentColor(self.avg_prod_indicator, constants.COLOR.GREEN,
                     constants.EMIT.INDICATOR)
             elseif avgProductivity >= 0.5 then
-                utils:setComponentColor(displayPanel.prod.indicatrors.avg_productivity, self.colors.COLOR.YELLOW,
+                utils:setComponentColor(self.avg_prod_indicator, constants.COLOR.YELLOW,
                     constants.EMIT.INDICATOR)
             elseif avgProductivity > 0 then
-                utils:setComponentColor(displayPanel.prod.indicatrors.avg_productivity, self.colors.COLOR.ORANGE,
+                utils:setComponentColor(self.avg_prod_indicator, constants.COLOR.ORANGE,
                     constants.EMIT.INDICATOR)
             else
-                utils:setComponentColor(displayPanel.prod.indicatrors.avg_productivity, self.colors.COLOR.RED,
+                utils:setComponentColor(self.avg_prod_indicator, constants.COLOR.RED,
                     constants.EMIT.INDICATOR)
             end
         end
     end
 
     function ProductivityMonitoring:updateButton(index)
-        local button = displayPanel.prod.buttons[index]
+        local button = self.prod_buttons[index]
         local machine = self.machines[index]
-
-        if not button or not machine then return end
 
         if machine.standby then
             utils:setComponentColor(button, constants.COLOR.RED, constants.EMIT.BUTTON)
@@ -165,10 +173,10 @@ return function(dependencies)
 
     function ProductivityMonitoring:updateEmergencyButton()
         if self.emergency_state then
-            utils:setComponentColor(displayPanel.prod.emergency_stop, constants.COLOR.RED, constants.EMIT
+            utils:setComponentColor(self.emergency_stop, constants.COLOR.RED, constants.EMIT
                 .BUTTON)
         else
-            utils:setComponentColor(displayPanel.prod.emergency_stop, constants.COLOR.RED, constants.EMIT.OFF)
+            utils:setComponentColor(self.emergency_stop, constants.COLOR.RED, constants.EMIT.OFF)
         end
     end
 
@@ -194,14 +202,14 @@ return function(dependencies)
 
     function ProductivityMonitoring:handleIOTriggerEvent(source)
         -- Check emergency stop
-        if source == displayPanel.prod.emergency_stop then
+        if source == self.emergency_stop then
             print("Emergency stop triggered")
             self:handleEmergencyStop()
             return
         end
 
         -- Check factory buttons
-        for i, button in ipairs(displayPanel.prod.buttons) do
+        for i, button in ipairs(self.prod_buttons) do
             if source == button then
                 print("machine button pressed:", i)
                 self:handleButtonPress(i)

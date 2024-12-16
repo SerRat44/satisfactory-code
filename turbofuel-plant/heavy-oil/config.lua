@@ -1,8 +1,6 @@
 -- turbofuel-plant/heavy-oil/config.lua
 
 return {
-    HISTORY_LENGTH = 1800, -- 30 minutes in seconds (30 * 60)
-    UPDATE_INTERVAL = 1,
     REFINERY_IDS = {
         "D1F743E04B122411F5D883AB9451315A",
         "721DAD354B8903283D76468DFA21F5CF",
@@ -61,11 +59,11 @@ return {
         BATTERY_SWITCH = "D41817DE4531874AD41C0E8AA61CAC3A",
         LIGHT_SWITCH = "B6AD10DE4F9BCFD751CA49A2A74917ED"
     },
-    COMPONENT_IDS = {
-        DISPLAY_PANEL = "84B30B434C7A0A65FAAD739267DC1F3C"
-    },
+
+    PANEL_ID = "84B30B434C7A0A65FAAD739267DC1F3C",
+
     DISPLAY_LAYOUT = {
-        PRODUCTIVITY_ROWS = {
+        MACHINE_ROWS = {
             -- First row of 10 machines
             { startX = 1, startY = 2, panelNum = 0, count = 10 },
             -- Second row of 10 machines
@@ -76,7 +74,6 @@ return {
             { startX = 1, startY = 5, panelNum = 0, count = 10 }
         },
         EMERGENCY_STOP = { x = 10, y = 10, z = 0 },
-        HEALTH_INDICATOR = { x = 1, y = 10, z = 0 },
-        PRODUCTIVITY_DISPLAY = { x = 2, y = 9, z = 0 }
+        AVG_PROD_INDICATOR = { x = 2, y = 10, z = 0 }
     }
 }
