@@ -52,18 +52,18 @@ return function(dependencies)
 
             itemsPerMin = itemsPerMin * potential
 
-            flows.item[i] = prod.type.name
-            flows.maxFlow[i] = itemsPerMin
+            flows[i].item = prod.type.name
+            flows[i].maxFlow = itemsPerMin
         end
 
-        return flows
+        return flows.item, flows.maxFlow
     end
 
     function FlowMonitoring:updateItemFlowDisplays()
         for i, block in pairs(self.flow_block) do
-            local flows = self:getMaxProductFlow(self.machines[i])
+            local items, maxFlows = self:getMaxProductFlow(self.machines[i])
 
-            local maxFlow = flows.maxFlow[i]
+            local maxFlow = maxFlows[i]
             local currentFlow = maxFlow * self.machine[i].productivity
 
             block.gauge.limit = maxFlow
@@ -71,7 +71,7 @@ return function(dependencies)
             self.utils:updateGaugeColor(block.gauge)
 
             self.flow_block.topDisplay:setText(string.format("%.2f", currentFlow))
-            self.flow_block.bottomDisplay:setText(flows.item[i])
+            self.flow_block.bottomDisplay:setText(items[i] .. "/min")
         end
     end
 
