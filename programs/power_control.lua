@@ -102,15 +102,15 @@ return function(dependencies)
 
         if source == self.io_switches.factory then
             debug("Main power switch triggered, state:", source.state)
-            self.power_switch:setIsSwitchOn(source.state)
+            self.switches.power:setIsSwitchOn(source.state)
             self:updatePowerIndicators()
         elseif source == self.io_switches.battery then
             debug("Battery switch triggered, state:", source.state)
-            self.battery_switch:setIsSwitchOn(source.state)
+            self.switches.battery:setIsSwitchOn(source.state)
             self:updatePowerIndicators()
         elseif source == self.io_switches.lights then
             debug("Light switch triggered, state:", source.state)
-            self.light_switch.isLightEnabled = source.state
+            self.switches.lights.isLightEnabled = source.state
         end
     end
 
