@@ -65,7 +65,7 @@ return function(dependencies)
             local currentFlow = maxFlow * self.machine[i].productivity
 
             block.gauge.limit = maxFlow
-            block.gauge.percent = currentFlow / maxFlow
+            block.gauge.percent = currentFlow
             self.utils:updateGaugeColor(gauge)
 
             self.flow_block.topDisplay:setText(string.format("%.2f", currentFlow))
