@@ -49,9 +49,9 @@ return function(dependencies)
         self.battery.mwh = self.panel:getModule(7, 6, 2)
 
         -- Initialize power displays
-        self.power_displays.MAIN_USED = self.panel:getModule(0, 3, 2)
-        self.power_displays.MAIN_PRODUCED = self.panel:getModule(1, 3, 2)
-        self.power_displays.FACTORY_USED = self.panel:getModule(4, 3, 2)
+        self.power_displays.main_used = self.panel:getModule(0, 3, 2)
+        self.power_displays.main_produced = self.panel:getModule(1, 3, 2)
+        self.power_displays.factory_used = self.panel:getModule(4, 3, 2)
 
         -- Get the connectors
         self.main_circuit = self.switches.power:getPowerConnectors()[2]:getCircuit()
@@ -115,13 +115,10 @@ return function(dependencies)
     end
 
     function PowerControl:updatePowerIndicators()
-        if self.main_circuit.isFuesed then
-            self.utils:setComponentColor(self.indicators.MAIN, self.constants.COLOR.RED,
-                self.constants.EMIT.INDICATOR)
-        else
-            self.utils:setComponentColor(self.indicators.MAIN, self.constants.COLOR.GREEN,
-                self.constants.EMIT.INDICATOR)
-        end
+        self.utils:setComponentColor(self.indicators.main,
+            self.main_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
+            self.constants.EMIT.INDICATOR)
+
 
         self.self.switches.factory.state = self.power_switch.isSwitchOn
         self.utils:setComponentColor(self.indicators.main_switch,
