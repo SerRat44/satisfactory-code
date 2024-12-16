@@ -1,11 +1,6 @@
 -- programs/machine_control.lua
 
 return function(dependencies)
-    local constants = dependencies.constants
-    local config = dependencies.config
-    local displayPanel = dependencies.displayPanel
-    local utils = dependencies.utils
-
     local ProductivityMonitoring = {
         machines = {},
         emergency_state = false,
@@ -15,7 +10,12 @@ return function(dependencies)
         prod_buttons = {},
         prod_gauges = {},
         emergency_stop = nil,
-        avg_prod_indicator = nil
+        avg_prod_indicator = nil,
+        constants = dependencies.constants,
+        config = dependencies.config,
+        displayPanel = dependencies.displayPanel,
+        utils = dependencies.utils
+
     }
 
     function ProductivityMonitoring:initialize()
@@ -25,7 +25,7 @@ return function(dependencies)
         end
 
         for i, row in ipairs(config.DISPLAY_LAYOUT.MACHINE_ROWS) do
-            local modules = displayPanel:initializeMachineRow(self.panel, table.unpack(row))
+            local modules = self.displayPanel:initializeMachineRow(self.panel, table.unpack(row))
             local buttons = modules[1]
             local gauges = modules[2]
 
@@ -33,13 +33,13 @@ return function(dependencies)
             table.insert(self.prod_gauges, table.unpack(gauges))
         end
 
-        self.emergency_stop = self.panel:getModule(table.unpack(config.DISPLAY_LAYOUT.EMERGENCY_STOP))
-        self.avg_prod_indicator = self.panel:getModule(table.unpack(config.DISPLAY_LAYOUT.AVG_PROD_INDICATOR))
+        self.emergency_stop = self.panel:getModule(table.unpack(self.config.DISPLAY_LAYOUT.EMERGENCY_STOP))
+        self.avg_prod_indicator = self.panel:getModule(table.unpack(self.config.DISPLAY_LAYOUT.AVG_PROD_INDICATOR))
 
         self.light_switch = component.proxy(config.POWER.LIGHT_SWITCH)
 
         print("Initializing machines...")
-        for i, id in ipairs(config.REFINERY_IDS) do
+        for i, id in ipairs(self.config.REFINERY_IDS) do
             local machine = component.proxy(id)
             if machine then
                 self.machines[i] = machine
@@ -121,32 +121,32 @@ return function(dependencies)
             if machine and not machine.standby then
                 local prod = machine.productivity or 0
                 gauge.percent = prod
-                utils:updateGaugeColor(gauge)
+                self.utils:updateGaugeColor(gauge)
             else
                 gauge.percent = 0
-                utils:setComponentColor(gauge, constants.COLOR.RED, constants.EMIT.OFF)
+                self.utils:setComponentColor(gauge, self.constants.COLOR.RED, self.constants.EMIT.OFF)
             end
         end
     end
 
     function ProductivityMonitoring:updateProdIndicator()
         if self.emergency_state then
-            utils:setComponentColor(self.avg_prod_indicator, constants.COLOR.RED,
-                constants.EMIT.INDICATOR)
+            self.utils:setComponentColor(self.avg_prod_indicator, self.constants.COLOR.RED,
+                self.constants.EMIT.INDICATOR)
         else
             local avgProductivity = self:avgProductivity()
             if avgProductivity >= 0.9 then
-                utils:setComponentColor(self.avg_prod_indicator, constants.COLOR.GREEN,
-                    constants.EMIT.INDICATOR)
+                self.utils:setComponentColor(self.avg_prod_indicator, self.constants.COLOR.GREEN,
+                    self.constants.EMIT.INDICATOR)
             elseif avgProductivity >= 0.5 then
-                utils:setComponentColor(self.avg_prod_indicator, constants.COLOR.YELLOW,
-                    constants.EMIT.INDICATOR)
+                self.utils:setComponentColor(self.avg_prod_indicator, self.constants.COLOR.YELLOW,
+                    self.constants.EMIT.INDICATOR)
             elseif avgProductivity > 0 then
-                utils:setComponentColor(self.avg_prod_indicator, constants.COLOR.ORANGE,
-                    constants.EMIT.INDICATOR)
+                self.utils:setComponentColor(self.avg_prod_indicator, self.constants.COLOR.ORANGE,
+                    self.constants.EMIT.INDICATOR)
             else
-                utils:setComponentColor(self.avg_prod_indicator, constants.COLOR.RED,
-                    constants.EMIT.INDICATOR)
+                self.utils:setComponentColor(self.avg_prod_indicator, self.constants.COLOR.RED,
+                    self.constants.EMIT.INDICATOR)
             end
         end
     end
@@ -156,27 +156,27 @@ return function(dependencies)
         local machine = self.machines[index]
 
         if machine.standby then
-            utils:setComponentColor(button, constants.COLOR.RED, constants.EMIT.BUTTON)
+            self.utils:setComponentColor(button, self.constants.COLOR.RED, self.constants.EMIT.BUTTON)
             return
         end
 
         local prod = machine.productivity or 0
 
         if prod >= 0.90 then
-            utils:setComponentColor(button, constants.COLOR.GREEN, constants.EMIT.BUTTON)
+            self.utils:setComponentColor(button, self.constants.COLOR.GREEN, self.constants.EMIT.BUTTON)
         elseif prod >= 0.5 then
-            utils:setComponentColor(button, constants.COLOR.YELLOW, constants.EMIT.BUTTON)
+            self.utils:setComponentColor(button, self.constants.COLOR.YELLOW, self.constants.EMIT.BUTTON)
         else
-            utils:setComponentColor(button, constants.COLOR.ORANGE, constants.EMIT.BUTTON)
+            self.utils:setComponentColor(button, self.constants.COLOR.ORANGE, self.constants.EMIT.BUTTON)
         end
     end
 
     function ProductivityMonitoring:updateEmergencyButton()
         if self.emergency_state then
-            utils:setComponentColor(self.emergency_stop, constants.COLOR.RED, constants.EMIT
+            self.utils:setComponentColor(self.emergency_stop, self.constants.COLOR.RED, self.constants.EMIT
                 .BUTTON)
         else
-            utils:setComponentColor(self.emergency_stop, constants.COLOR.RED, constants.EMIT.OFF)
+            self.utils:setComponentColor(self.emergency_stop, self.constants.COLOR.RED, self.constants.EMIT.OFF)
         end
     end
 

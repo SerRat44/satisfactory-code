@@ -1,4 +1,4 @@
--- common/display.lua
+-- common/display_panel.lua
 
 return function()
     local Display = {}
