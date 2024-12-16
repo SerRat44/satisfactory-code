@@ -123,7 +123,7 @@ return function(dependencies)
         self.utils:setComponentColor(self.indicators.factory_switch,
             self.switches.power.isSwitchOn and self.constants.COLOR.GREEN or self.constants.COLOR.RED,
             self.constants.EMIT.INDICATOR)
-        self.utils:setComponentColor(self.indicators.FACTORY,
+        self.utils:setComponentColor(self.indicators.factory,
             self.factory_circuit.isFuesed and self.constants.COLOR.RED or self.constants.COLOR.GREEN,
             self.constants.EMIT.INDICATOR)
 
