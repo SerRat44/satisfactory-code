@@ -21,12 +21,12 @@ return function(dependencies)
     function ProductivityMonitoring:initialize()
         debug("===Initializing Program - Machine Control===")
 
-        self.panel = component.proxy(config.PANEL_ID)
+        self.panel = component.proxy(self.config.PANEL_ID)
         if not self.panel then
             error("Failed to initialize panel")
         end
 
-        for i, row in ipairs(config.DISPLAY_LAYOUT.MACHINE_ROWS) do
+        for i, row in ipairs(self.config.DISPLAY_LAYOUT.MACHINE_ROWS) do
             local modules = self.display_panel:initializeMachineRow(self.panel, table.unpack(row))
             local buttons = modules[1]
             local gauges = modules[2]
@@ -38,7 +38,7 @@ return function(dependencies)
         self.emergency_stop = self.panel:getModule(table.unpack(self.config.DISPLAY_LAYOUT.EMERGENCY_STOP))
         self.avg_prod_indicator = self.panel:getModule(table.unpack(self.config.DISPLAY_LAYOUT.AVG_PROD_INDICATOR))
 
-        self.light_switch = component.proxy(config.POWER.LIGHT_SWITCH)
+        self.light_switch = component.proxy(self.config.POWER.LIGHT_SWITCH)
 
         print("Initializing machines...")
         for i, id in ipairs(self.config.REFINERY_IDS) do
