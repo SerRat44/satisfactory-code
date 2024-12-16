@@ -1,12 +1,8 @@
 -- turbofuel-plant/heavy-oil/control.lua
 return function(programs)
     local Control = {
-        programs = {}
+        programs = programs
     }
-
-    for _, program in ipairs(programs) do
-        table.insert(self.programs, program)
-    end
 
     -- Handle events centrally
     function Control:handleEvents()
@@ -31,7 +27,7 @@ return function(programs)
     function Control:start()
         -- Initialize programs
         debug("Initializing programs...")
-        for _, program in ipairs(programs) do
+        for _, program in ipairs(self.programs) do
             if program.initialize then
                 program:initialize()
             end
@@ -42,7 +38,7 @@ return function(programs)
             Control:handleEvents() -- Handle events first
 
             -- Update all programs
-            for _, program in ipairs(programs) do
+            for _, program in ipairs(self.programs) do
                 if program.update then
                     program:update()
                 end
