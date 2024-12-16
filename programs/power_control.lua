@@ -54,9 +54,9 @@ return function(dependencies)
         self.power_displays.FACTORY_USED = self.panel:getModule(4, 3, 2)
 
         -- Get the connectors
-        self.main_circuit = self.power_switch:getPowerConnectors()[2]:getCircuit()
-        self.factory_circuit = self.power_switch:getPowerConnectors()[1]:getCircuit()
-        self.battery_circuit = self.battery_switch:getPowerConnectors()[1]:getCircuit()
+        self.main_circuit = self.switches.power:getPowerConnectors()[2]:getCircuit()
+        self.factory_circuit = self.switches.power:getPowerConnectors()[1]:getCircuit()
+        self.battery_circuit = self.switches.battery:getPowerConnectors()[1]:getCircuit()
 
         -- Set up event listening for power fuses
         event.listen(self.main_circuit)
@@ -68,9 +68,9 @@ return function(dependencies)
         event.listen(self.io_switches.battery)
         event.listen(self.io_switches.lights)
 
-        self.io_switches.factory.state = self.power_switch.isSwitchOn
-        self.io_switches.battery.state = self.battery_switch.isSwitchOn
-        self.io_switches.lights.state = self.light_switch.isLightEnabled
+        self.io_switches.factory.state = self.switches.power.isSwitchOn
+        self.io_switches.battery.state = self.io_switches.battery.isSwitchOn
+        self.io_switches.lights.state = self.io_switches.lights.isLightEnabled
 
         -- Update initial power indicators
         self:updatePowerIndicators()
