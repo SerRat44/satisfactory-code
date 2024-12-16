@@ -120,7 +120,7 @@ return function(dependencies)
             self.constants.EMIT.INDICATOR)
 
         self.io_switches.factory.state = self.switches.power.isSwitchOn
-        self.utils:setComponentColor(self.indicators.main_switch,
+        self.utils:setComponentColor(self.indicators.factory_switch,
             self.switches.power.isSwitchOn and self.constants.COLOR.GREEN or self.constants.COLOR.RED,
             self.constants.EMIT.INDICATOR)
         self.utils:setComponentColor(self.indicators.FACTORY,
