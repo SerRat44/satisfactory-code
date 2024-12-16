@@ -5,7 +5,7 @@ return function(dependencies)
         valves = {},
         networkCard = nil,
         machines = {},
-        flow_block = {},
+        flow_blocks = {},
         constants = dependencies.constants,
         config = dependencies.config,
         displayPanel = dependencies.displayPanel,
@@ -23,7 +23,7 @@ return function(dependencies)
         for i, block in ipairs(self.config.DISPLAY_LAYOUT.FLOW_BLOCKS) do
             local gauge, topDisplay, bottomDisplay = self.displayPanel:initializeFlowBlock(self.panel, block.x, block.y,
                 block.z)
-            self.flow_block[i] = { gauge = gauge, topDisplay = topDisplay, bottomDisplay = bottomDisplay }
+            self.flow_blocks[i] = { gauge = gauge, topDisplay = topDisplay, bottomDisplay = bottomDisplay }
         end
 
         debug("Initializing machines...")
@@ -60,7 +60,7 @@ return function(dependencies)
     end
 
     function FlowMonitoring:updateItemFlowDisplays()
-        for i, block in pairs(self.flow_block) do
+        for i, block in pairs(self.flow_blocks) do
             local items, maxFlows = self:getMaxProductFlow(self.machines[i])
 
             local maxFlow = maxFlows[i]
@@ -70,8 +70,8 @@ return function(dependencies)
             block.gauge.percent = currentFlow
             self.utils:updateGaugeColor(block.gauge)
 
-            self.flow_block.topDisplay:setText(string.format("%.2f", currentFlow))
-            self.flow_block.bottomDisplay:setText(items[i] .. "/min")
+            block.topDisplay:setText(string.format("%.2f", currentFlow))
+            block.bottomDisplay:setText(items[i] .. "/min")
         end
     end
 
