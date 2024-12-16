@@ -52,7 +52,7 @@ return function(dependencies)
 
             itemsPerMin = itemsPerMin * potential
 
-            flows[i].item = prod.name
+            flows[i].item = prod.type.name
             flows[i].maxFlow = itemsPerMin
         end
 
