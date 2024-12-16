@@ -212,7 +212,6 @@ return function(dependencies)
 
     function PowerControl:update()
         self:updatePowerDisplays()
-        self:updateIOColors()
         self:broadcastPowerStatus()
     end
 
